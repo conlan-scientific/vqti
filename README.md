@@ -13,3 +13,15 @@ git push
 git pull
 ```
 
+#### Setting up a conda environment
+
+```
+# From a conda-enabled shell ...
+conda create --name vqti python=3.8
+conda activate vqti
+conda install pandas numpy matplotlib scipy scikit-learn
+pip install ipython psutil
+```
+
+
+
