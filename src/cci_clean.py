@@ -15,15 +15,17 @@ import pandas as pd
 import numpy as np
 
 @time_this
-def compute_cci(df: pd.DataFrame, n_days: int=20) -> pd.DataFrame: 
+def compute_cci(df: pd.DataFrame, p: int=20) -> pd.DataFrame: 
     # Define the typical price for a day 
     df['tp'] = (df['high'] + df['low'] + df['close']) / 3 
     
+    # TODO: Make this mean O(n)
     # Find the moving average of the typical prices
-    df['sma'] = df['tp'].rolling(n_days).mean()
+    df['sma'] = df['tp'].rolling(p).mean()
 
     # Calculate the mean average divergence
-    df['mad'] = df['tp'].rolling(n_days).apply(lambda x: pd.Series(x).mad())
+    # TODO: Make this mad O(n)
+    df['mad'] = df['tp'].rolling(p).apply(lambda x: pd.Series(x).mad())
 
     # Put it all together using formula for cci
     df['cci'] = (df['tp'] - df['sma']) / (0.015 * df['mad']) #Lambert (creator of CCI) recommends 0.015 for stability.
@@ -31,8 +33,10 @@ def compute_cci(df: pd.DataFrame, n_days: int=20) -> pd.DataFrame:
     return df
 
 @time_this
-def compute_cci_v2(df: pd.DataFrame, n_days: int=20) -> pd.DataFrame: 
+def compute_cci_v2(df: pd.DataFrame, p: int=20) -> pd.DataFrame: 
     # Vectorization implementation for typical price
+
+    # TODO: Make this pure numpy
     arr_high = df["high"].array 
     arr_low = df["low"].array
     arr_close = df["close"].array
@@ -42,17 +46,17 @@ def compute_cci_v2(df: pd.DataFrame, n_days: int=20) -> pd.DataFrame:
     df['tp'] =arr_tp 
     
     # Find the moving average of the typical prices
-    df['sma'] = df['tp'].rolling(n_days).mean()
+    df['sma'] = df['tp'].rolling(p).mean()
 
     # Calculate the mean average divergence
-    df['mad'] = df['tp'].rolling(n_days).apply(lambda x: pd.Series(x).mad())
+    df['mad'] = df['tp'].rolling(p).apply(lambda x: pd.Series(x).mad())
 
     # Put it all together using formula for cci
     df['cci'] = (df['tp'] - df['sma']) / (0.015 * df['mad']) #Lambert (creator of CCI) recommends 0.015 for stability.
     
     return df
 
-def graph_cci(df:pd.DataFrame, n_days: int=14):
+def graph_cci(df:pd.DataFrame, p: int=14):
     # Plot the price series chart and cci 
     fig = plt.figure(figsize=(7,5))
     ax = fig.add_subplot(2, 1, 1)
@@ -80,13 +84,13 @@ if __name__ == '__main__':
     #print(df.head())   
 
     # View results
-    method_1 = compute_cci(df, n_days=20)
-    method_2 = compute_cci_v2(df, n_days=20)
+    method_1 = compute_cci(df, p=20)
+    method_2 = compute_cci_v2(df, p=20)
 
     pd.set_option('display.max_columns', None)
     print(method_1.head(20))
     pd.reset_option('display.max_columns')
     
-    graph_cci(df, n_days=20)
+    graph_cci(df, p=20)
 
 

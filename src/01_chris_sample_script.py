@@ -54,8 +54,14 @@ def numpy_sma(close: np.ndarray, m: int=10) -> pd.Series:
 	"""
 	This is an O(n) algorithm
 	"""
+
+	# This is an O(n) operation
 	accum = close.cumsum()
+
+	# This is an O(n) operation
 	delta_accum = accum[m:] - accum[:-m]
+
+	# This is an O(n) operation
 	return delta_accum / m
 
 if __name__ == '__main__':

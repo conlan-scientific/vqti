@@ -9,16 +9,39 @@ from typing import List
 @time_this
 def aroon_python_basic(high: List[float], low: List[float], p: int=25) -> List[float]:
     """
-    This is an O(?) algorithm
+    This is an O(np) algorithm a lists of length n and lookback of p
+
+    highs and lows are highs and lows of daily candlesticks
     """
     result: List = [None] * (p-1)
+
+    assert len(high) == len(low), 'Lists are unequal length.'
+
+    # TODO: Compute the rolling min and max as lists up here
+    # ...
+    # TODO: Compute aroon_down_idx in a loop in advance (maybe?)
+
+    # loop is approx n elements
     for i in range(p, len(low)+1):
+
+        # Each of these is a loop of p elements
+        # Rolling min and max of length p
         low_window_min: float = min(low[i-p:i])
         high_window_max: float = max(high[i-p:i])
-        aroon_down: float = 100*(p-low[i-p:i][::-1].index(low_window_min))/p
-        aroon_up: float = 100*(p-high[i-p:i][::-1].index(high_window_max))/p
+
+        # Each of these is also O(p)
+        # Find the rolling argmin of a length p lookback window on low
+        aroon_down_idx: int = low[i-p:i][::-1].index(low_window_min)
+        aroon_down: float = 100*(p-aroon_down_idx)/p
+
+        # Find the rolling argmax of a length p lookback window on high
+        aroon_up_idx: int = high[i-p:i][::-1].index(high_window_max)
+        aroon_up: float = 100*(p-aroon_up_idx)/p
+
+        # This is O(1) operation. Nothing to worry about here.
         aroon_oscillator: float = aroon_up - aroon_down
         result.append(aroon_oscillator)
+
     return result
 
 
@@ -35,13 +58,18 @@ def test_pure_python_aroon():
 @time_this
 def aroon_pandas(high: pd.Series, low: pd.Series, p: int=25) -> pd.Series:
     """
-    This is an O(?) algorithm
+    This is an O(np) algorithm
     """
+    assert high.index.equals(low.index), 'Indexes are unequal.'
 
-    high_idx: pd.Series = high.reset_index().index - \
-               high.reset_index().high.rolling(window=p).apply(lambda x: pd.Series(x).idxmax())
-    low_idx: pd.Series = low.reset_index().index - \
-              low.reset_index().low.rolling(window=p).apply(lambda x: pd.Series(x).idxmax())
+    range_index = pd.Index(list(range(high.shape[0])))
+
+    high_idx: pd.Series = range_index - \
+            high.reset_index().high.rolling(window=p).apply(lambda x: x.idxmax())
+
+    low_idx: pd.Series = range_index - \
+              low.reset_index().low.rolling(window=p).apply(lambda x: x.idxmax())
+
     aroon_high: pd.Series = 100 * (p - high_idx)/p
     aroon_low: pd.Series = 100 * (p - low_idx)/p
     aroon_oscillator: pd.Series = aroon_high - aroon_low
@@ -73,4 +101,4 @@ if __name__ == '__main__':
     # test_pure_python_aroon()
     result: List = aroon_python_basic(df.high.tolist(), df.low.tolist())
     # test_pandas_aroon()
-    result: pd.Series = aroon_pandas(df.high, df.low, p=2)
+    result: pd.Series = aroon_pandas(df.high, df.low)
