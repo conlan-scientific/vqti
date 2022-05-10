@@ -76,15 +76,16 @@ def pandas_wma_2(close: pd.Series, m: int=10) -> pd.Series:
 
 @time_this
 def pandas_wma_3(close: pd.Series, m: int=10) -> pd.Series:
-	weights = np.array([])
+	weights = []
 	denom = (m * (m+1)) / 2
 	for i in range(1, m+1):
 		x = i / denom 
 		weights.append(x)
+	weights = np.array(weights)
 	return close.rolling(window=m).apply(lambda x: np.sum(weights*x))
 
 @time_this
-def pandas_hma(close: pd.Series, m: int=10):
+def pandas_hma(close: pd.Series, m: int=10) -> pd.Series:
 	return pandas_wma((2* pandas_wma(close, int(m/2))) - (pandas_wma(close, m)), int(np.sqrt(m)))
 
 
@@ -95,9 +96,9 @@ if __name__ == '__main__':
 	print(df)
 
 	result = pure_python_wma(df.close.tolist(), 4)
-	
-
-	
-	
+	result = pure_python_hma(df.close.tolist(), 4)
+	result = pandas_wma(df.close, 4)
+	result = pandas_wma_2(df.close, 4)
+	result = pandas_wma_3(df.close, 4)
 	result = pandas_hma(df.close, 4)
-	print(result)
+	# print(result)
