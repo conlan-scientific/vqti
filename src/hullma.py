@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from typing import List
+import math
 
 # HMA= WMA(2*WMA(n/2) − WMA(n)),sqrt(n))
 # recommended n = 4, 9, 16, 25, 49, 81
@@ -42,14 +43,20 @@ def pure_python_wma(values: List[float], m: int=10)-> List[float]:
 
 @time_this
 def pure_python_hma(close: List[float], m: int=10) -> List[float]:
-	wma1 = np.array(pure_python_wma(close, int(m/2))) 
-	# fix bug
-	wma1 = wma1 * 2
+	wma1 = np.array(pure_python_wma(close, int(m/2)))
+	# multiply wma1 by 2 while keeping nan values
+	wma1_multiplied = [None] * (int(m/2) -1)
+	for i in range((int(m/2)-1), len(wma1)):
+		y = wma1[i] *2
+		wma1_multiplied.append(y)
+  
 	wma2 = np.array(pure_python_wma(close, m))
-	raw_hma = [None] * m
-	for i in range(m, len(wma2)):
-		raw_hma.append(np.subtract(wma1[i], wma2[i]))
+	# subtract wma2 from wma1 multiplied while keeping null values
+	raw_hma = [0] * (m-1)
+	for i in range((m-1), len(wma2)):
+		raw_hma.append(np.subtract(wma1_multiplied[i], wma2[i]))
 	hma= pure_python_wma(raw_hma, int(np.sqrt(m)))
+	hma[0:m] = [None] * m
 	return hma
 
 @time_this
