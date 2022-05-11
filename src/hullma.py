@@ -60,7 +60,7 @@ def pure_python_hma(close: List[float], m: int=10) -> List[float]:
 	return hma
 
 @time_this
-def numpy_wma(values: np.ndarray, m: int) -> np.ndarray:
+def numpy_wma(values: pd.Series, m: int) -> np.ndarray:
     n = values.shape[0]
     weights = []
     denom = (m * (m+1)) / 2
@@ -88,6 +88,10 @@ def numpy_wma(values: np.ndarray, m: int) -> np.ndarray:
         y[i] = weights.dot(values[(i-m+1):i+1])
 
     return y
+
+@time_this
+def numpy_hma(close: pd.Series, m: int=10) -> np.array:
+	return numpy_wma((2* numpy_wma(close, int(m/2))) - (numpy_wma(close, m)), int(np.sqrt(m)))
 
 @time_this
 #fastest wma
@@ -133,10 +137,11 @@ if __name__ == '__main__':
 	df = load_eod('AWU')
 	print(df)
 
-	print(test_wma)
+	test_wma()
 	result = pure_python_wma(df.close.tolist(), 4)
 	result = pure_python_hma(df.close.tolist(), 4)
 	result = numpy_wma(df.close.to_numpy(), 4)
+	result = numpy_hma(df.close, 4)
 	result = pandas_wma(df.close, 4)
 	result = pandas_wma_2(df.close, 4)
 	result = pandas_wma_3(df.close, 4)
