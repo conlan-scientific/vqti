@@ -9,8 +9,10 @@ from typing import List
 # K = (closing price - low) / (high - low) x 100
 # D = (k1 + k2 + k3 ....) / N
 
+# TODO: Python implementation
+
 @time_this
-def pandas_stochastic(close: pd.series) -> float:
+def pandas_stochastic(close: pd.Series) -> float:
 
 	low = close.rolling(14).min()
 
@@ -28,7 +30,7 @@ def numpy_stochastic(close: np.ndarray) -> float:
 
 	low = np.nanmin(close)
 
-    high = np.nanmax(close)
+	high = np.nanmax(close)
 
 	close_price = close.iloc[-1]
 
