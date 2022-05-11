@@ -14,7 +14,7 @@ def aroon_python_basic(high: List[float], low: List[float], p: int=25) -> List[f
 
     highs and lows are highs and lows of daily candlesticks
     """
-    result: List = [None] * (p-1)
+    result: List = [None] * (p)
 
     assert len(high) == len(low), 'Lists are unequal length.'
 
@@ -23,33 +23,35 @@ def aroon_python_basic(high: List[float], low: List[float], p: int=25) -> List[f
     # TODO: Compute aroon_down_idx in a loop in advance (maybe?)
 
     # loop is approx n elements
-    for i in range(p, len(low)+1):
-
+    for i in range(p, len(low)):
         # Each of these is a loop of p elements
         # Rolling min and max of length p
-        low_window_min: float = min(low[i-p:i])
-        high_window_max: float = max(high[i-p:i])
+        low_window_min: float = min(low[i-p:i+1])
+        high_window_max: float = max(high[i-p:i+1])
 
         # Each of these is also O(p)
         # Find the rolling argmin of a length p lookback window on low
-        aroon_down_idx: int = low[i-p:i][::-1].index(low_window_min)
+        aroon_down_idx: int = low[i-p:i+1][::-1].index(low_window_min)
         aroon_down: float = 100*(p-aroon_down_idx)/p
 
         # Find the rolling argmax of a length p lookback window on high
-        aroon_up_idx: int = high[i-p:i][::-1].index(high_window_max)
+        aroon_up_idx: int = high[i-p:i+1][::-1].index(high_window_max)
         aroon_up: float = 100*(p-aroon_up_idx)/p
 
         # This is O(1) operation. Nothing to worry about here.
         aroon_oscillator: float = aroon_up - aroon_down
+
         result.append(aroon_oscillator)
 
     return result
 
 
 def test_pure_python_aroon():
-    # TODO: needs better manual verification
-    ground_truth_result = [None, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0]
-    test_result = aroon_python_basic([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], p=2)
+    ground_truth_result = [None, -100.0, -100.0, -100.0, 0.0, -100.0, 100.0, 100.0, 100.0, 100.0]
+    test_result = aroon_python_basic(
+        [10, 9, 8, 7, 7, 3, 4, 5, 6, 7],
+        [10, 9, 8, 7, 7, 3, 4, 5, 6, 7],
+        p=1)
     print(test_result)
     assert len(ground_truth_result) == len(test_result)
     for i in range(len(ground_truth_result)):
