@@ -3,7 +3,7 @@ from vqti.profile import time_this
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from typing import List
+from typing import List, Deque
 from collections import deque
 
 
@@ -95,84 +95,51 @@ def test_pandas_aroon():
 @time_this
 def aroon_python_deque(high: List[float], low: List[float], p: int=25) -> List[float]:
     """
-    This is an O(n) ? algorithm for lists of length n and lookback of p
+    This is an O(n) algorithm for lists of length n and lookback of p
 
     highs and lows are highs and lows of daily candlesticks
 
     Based on the accepted answer to this StackOverflow question:
     https://stackoverflow.com/questions/14823713/efficient-rolling-max-and-min-window
 
-    Justification for why it's O(n)
+    Justification for why it's O(n):
+    https://stackoverflow.com/questions/53094476/why-is-the-deque-solution-to-the-sliding-window-maximum-problem-on-instead-o
     """
-    period=p+1
-
-    min_list: List = []
-    min_idx_list: List = []
-    periods_since_min_list: List = []
-    aroon_low_list: List = []
-
     assert len(high) == len(low), 'Lists are unequal length.'
-    low_deque = deque()
-    for idx, val in enumerate(low):
+    # Full lookback includes p historical periods plus the current period.
+    period: int = p+1
+
+    low_deque: Deque = deque()
+    high_deque: Deque = deque()
+    aroon_oscillator: List = []
+
+    for idx, low_val in enumerate(low):
+        # calculate Aroon Low
+        # remove any old values from the front of deque that are not in window:
         while len(low_deque) > 0 and idx >= low_deque[0][0] + period:
             low_deque.popleft()
-        while len(low_deque) > 0 and low_deque[len(low_deque)-1][1] >= val:
+        # remove any values from the end of deque that are larger than current low:
+        while len(low_deque) > 0 and low_deque[len(low_deque)-1][1] >= low_val:
             low_deque.pop()
-        low_deque.append(
-            (idx, val)
-        )
-        lookback_min = low_deque[0][1]
-        lookback_min_idx = low_deque[0][0]
-        periods_since_min = idx - lookback_min_idx
-        aroon_low = 100 * (p - periods_since_min) / p
-        # print(f"On position {idx} and the low min is {lookback_min} at index {lookback_min_idx}")
-        # print("Current state of deque:", low_deque)
-        min_list.append(lookback_min) if idx >= p else min_list.append(None)
-        min_idx_list.append(lookback_min_idx) if idx >= p else min_idx_list.append(None)
-        periods_since_min_list.append(periods_since_min) if idx >= p else periods_since_min_list.append(None)
-        aroon_low_list.append(aroon_low) if idx >= p else aroon_low_list.append(None)
-    # print(min_list)
-    # print(min_idx_list)
-    # print(periods_since_min_list)
+        low_deque.append( (idx, low_val) ) # add this value
+        lookback_min_idx: int = low_deque[0][0] # get window minimum's index from front of deque
+        periods_since_min: int = idx - lookback_min_idx
+        aroon_low: float = 100 * (p - periods_since_min) / p
 
-    max_list: List = []
-    max_idx_list: List = []
-    periods_since_max_list: List = []
-    aroon_high_list: List = []
-
-
-    high_deque = deque()
-    for idx, val in enumerate(high):
+        # calculate Aroon High. Similar procedure as Aroon Low
+        high_val: float = high[idx]
         while len(high_deque) > 0 and idx >= high_deque[0][0] + period:
             high_deque.popleft()
-        while len(high_deque) > 0 and high_deque[len(high_deque)-1][1] <= val:
+        while len(high_deque) > 0 and high_deque[len(high_deque)-1][1] <= high_val:
             high_deque.pop()
-        high_deque.append(
-            (idx, val)
-        )
-        lookback_max = high_deque[0][1]
-        lookback_max_idx = high_deque[0][0]
-        periods_since_max = idx - lookback_max_idx
-        aroon_high = 100 * (p - periods_since_max) / p
-        # print(f"On position {idx} and the low max is {lookback_max} at index {lookback_max_idx}")
-        # print("Current state of deque:", high_deque)
-        max_list.append(lookback_max) if idx >= p else max_list.append(None)
-        max_idx_list.append(lookback_max_idx) if idx >= p else max_idx_list.append(None)
-        periods_since_max_list.append(periods_since_max) if idx >= p else periods_since_max_list.append(None)
-        aroon_high_list.append(aroon_high) if idx >= p else aroon_high_list.append(None)
-    # print(max_list)
-    # print(max_idx_list)
-    # print(periods_since_max_list)
+        high_deque.append( (idx, high_val) )
+        lookback_max_idx: int = high_deque[0][0]
+        periods_since_max: int = idx - lookback_max_idx
+        aroon_high: float = 100 * (p - periods_since_max) / p
 
-    # print(aroon_high_list)
-    # print(aroon_low_list)
+        aroon_diff: float = aroon_high - aroon_low
+        aroon_oscillator.append(aroon_diff) if idx >= p else aroon_oscillator.append(None)
 
-    aroon_oscillator = [
-        high - low if high != None and low != None
-        else None
-        for high, low in zip(aroon_high_list, aroon_low_list)
-    ]
-    # print(aroon_oscillator)
     return aroon_oscillator
 
 
@@ -201,5 +168,6 @@ if __name__ == '__main__':
 
     result: List = aroon_python_basic(df.high.tolist(), df.low.tolist())
     result: List = aroon_python_deque(df.high.tolist(), df.low.tolist())
+
     # test_pandas_aroon()
-    result: pd.Series = aroon_pandas(df.high, df.low)
+    #result: pd.Series = aroon_pandas(df.high, df.low)
