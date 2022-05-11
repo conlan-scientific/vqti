@@ -60,7 +60,7 @@ def pure_python_hma(close: List[float], m: int=10) -> List[float]:
 	return hma
 
 @time_this
-def numpy_wma(values: pd.Series, m: int) -> np.ndarray:
+def numpy_wma(values: pd.Series, m: int=10) -> np.ndarray:
     n = values.shape[0]
     weights = []
     denom = (m * (m+1)) / 2
@@ -73,7 +73,7 @@ def numpy_wma(values: pd.Series, m: int) -> np.ndarray:
     if m > n:
         return np.array([np.nan]*n)
 
-    # Front and back padding of series
+    # Front padding of series
     front_pad = max(m-1, 0)
    
     # Initialize the output array
@@ -94,7 +94,7 @@ def numpy_hma(close: pd.Series, m: int=10) -> np.array:
 	return numpy_wma((2* numpy_wma(close, int(m/2))) - (numpy_wma(close, m)), int(np.sqrt(m)))
 
 @time_this
-#fastest wma
+#fastest pandas wma
 def pandas_wma(close: pd.Series, m: int=10) -> pd.Series:
 	# TODO: Initialize the weights outside of the apply function
 	if m > len(close):
@@ -122,14 +122,14 @@ def pandas_wma_3(close: pd.Series, m: int=10) -> pd.Series:
 @time_this
 # fastest hma
 def pandas_hma(close: pd.Series, m: int=10) -> pd.Series:
-	return pandas_wma((2* pandas_wma(close, int(m/2))) - (pandas_wma(close, m)), int(np.sqrt(m)))
+    return pandas_wma(2* pandas_wma(close, int(m/2)) - (pandas_wma(close, m)), int(np.sqrt(m)))
 
 def test_wma():
 	ground_truth_result = [None, None, None, 3, 4, 5, 6, 7, 8, 9]
 	test_result = pure_python_wma([1,2,3,4,5,6,7,8,9,10], 4) 
 	assert len(ground_truth_result) == len(test_result)
 	for i in range(len(ground_truth_result)):
-		assert ground_truth_result[i] == test_result[i]
+		assert ground_truth_result[i] == test_result[i], "test Failed"
 
 
 if __name__ == '__main__':
@@ -137,13 +137,16 @@ if __name__ == '__main__':
 	df = load_eod('AWU')
 	print(df)
 
-	test_wma()
+	# test_wma()
 	result = pure_python_wma(df.close.tolist(), 4)
+	print("break")
 	result = pure_python_hma(df.close.tolist(), 4)
+	print('break')
 	result = numpy_wma(df.close.to_numpy(), 4)
-	result = numpy_hma(df.close, 4)
+	print("break")
+	result = numpy_hma(df.close.to_numpy(), 4)
+	print("break")
 	result = pandas_wma(df.close, 4)
-	result = pandas_wma_2(df.close, 4)
-	result = pandas_wma_3(df.close, 4)
+	print("break")
 	result = pandas_hma(df.close, 4)
 	# print(result)
