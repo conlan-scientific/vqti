@@ -190,9 +190,11 @@ def _numba_cci (close: np.ndarray, window: int=20) -> np.ndarray:
     accum = close.cumsum()
     delta_accum = accum[window:] - accum[:-window]
     sma = delta_accum / window
+    # TODO: try removing the pad
     sma = np.pad(sma, (window,0), 'constant')
     #print('sma:', sma[:window+1], '\n')
     
+    # TODO: Don't even think about defensive programming inside numba
     assert len(sma) == len(close), 'Does not equal'
    
     
@@ -213,10 +215,13 @@ def _numba_cci (close: np.ndarray, window: int=20) -> np.ndarray:
     
     return cci
 
+# # Do a once-over to get the compilation
+# _numba_cci(np.array([1,2,3,4,5,6,7,8,9,10]), window=3)
 
-@time_this
-def numba_cci (close: np.ndarray, window: int=20) -> np.ndarray:
-    return _numba_cci (close, window=window)
+
+# @time_this
+# def numba_cci (close: np.ndarray, window: int=20) -> np.ndarray:
+#     return _numba_cci (close, window=window)
     
     
 if __name__ == '__main__':
@@ -250,3 +255,7 @@ if __name__ == '__main__':
     for i in range(len(python_listcomp)):
         print(i)
         np.testing.assert_equal(round(python_listcomp[i],8), round(numpy[i],8)), "Does not equal"
+
+
+
+        

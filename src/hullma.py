@@ -9,7 +9,7 @@ import math
 # HMA= WMA(2*WMA(n/2) − WMA(n)),sqrt(n))
 # recommended n = 4, 9, 16, 25, 49, 81
 
-@time_this
+# @time_this
 def pure_python_wma(values: List[float], m: int=10)-> List[float]:
 	"""
 	This is O(nm).

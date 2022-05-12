@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 from typing import List
 
+# TODO: DRY this up.
+
 @time_this
 def macd_python(close: List[float], n1: int = 2, n2: int = 3) -> List[float]:
     """
@@ -34,9 +36,10 @@ def macd_python(close: List[float], n1: int = 2, n2: int = 3) -> List[float]:
         else:
             result.append(sma1[i] - sma2[i])
     return result
+
 print(macd_python([1,2,3,4,5,6,7,8,9,10], n1=2, n2=3))
 
-
+@time_this
 def pandas_macd(close: pd.Series, n1: int = 2, n2: int = 3):
     assert n1 < n2
     sma1 = (close.cumsum() - close.cumsum().shift(n1)) / n1
@@ -44,7 +47,7 @@ def pandas_macd(close: pd.Series, n1: int = 2, n2: int = 3):
     return sma1 - sma2
 
 
-
+@time_this
 def numpy_macd(close: np.ndarray, n1: int = 2, n2: int = 3):
     assert n1 < n2
     sma1 = (close.cumsum()[n1:] - close.cumsum()[:-n1]) / n1
@@ -55,13 +58,19 @@ def numpy_macd(close: np.ndarray, n1: int = 2, n2: int = 3):
     figure out how to deal with dimensional mismatch during subtraction
     """
 
+# TODO: Get numpy_macd to work by padding with np.nan
+# TODO: Make sure your input dimensions match your output dimensions
+# TODO [Optional]: Investigate numba
+
 
 df = load_eod('AWU')
-print('Loaded Data:')
-print(df)
-print('-----------')
-print('Pure Python MACD')
-print(macd_python(df.close.tolist(), n1=2, n2=3))
-print('-----------')
-print(pandas_macd(df.close, n1=2, n2=3))
-print(numpy_macd(df.close.values, n1=2, n2=3))
+# 'Loaded Data:'
+# df
+# '-----------'
+# 'Pure Python MACD'
+macd_python(df.close.tolist(), n1=2, n2=3)
+# '-----------'
+pandas_macd(df.close, n1=2, n2=3)
+numpy_macd(df.close.values, n1=2, n2=3)
+
+
