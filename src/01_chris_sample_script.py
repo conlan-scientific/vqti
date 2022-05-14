@@ -14,6 +14,7 @@ def pure_python_sma(close: List[float], m: int=10) -> List[float]:
 	"""
 	This is an O(n) algorithm
 	"""
+	assert m >= 1, 'Window must be positive.'
 	result = [None] * (m-1)
 
 	accum = sum(close[:m])
@@ -23,6 +24,15 @@ def pure_python_sma(close: List[float], m: int=10) -> List[float]:
 		accum += close[i]
 		accum -= close[i-m]
 		result.append(accum / m)
+
+		# Speed improvements
+		# asdf
+		# asdf
+		# asdf
+		# asdf
+		# asdf
+		# asdf
+		# ads
 
 	return result
 
@@ -78,8 +88,22 @@ if __name__ == '__main__':
 	result = pandas_sma_v2(df.close)
 	result = numpy_sma(df.close.values)
 
+	# Positive test case
+	input_data = [1,2,3,4,5,6,7,8,9,10]
+	trust_case_data = [None, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5]
 
+	test_case = pure_python_sma(input_data, m=2)
+	truth_case = trust_case_data
+	assert test_case == truth_case, 'Test failed.'
 
+	test_case = pandas_sma(pd.Series(input_data), m=2)
+	truth_case = pd.Series(trust_case_data)
+	assert test_case == truth_case, 'Test failed.'	
 
+	# Negative test case
+	try:
+		pure_python_sma([1,2,3,4,5,6,7,8,9,10], m=-3)
+	except AssertionError as e:
+		assert e.args[0] == 'Window must be positive.', 'Uncaught error.'
 
 
