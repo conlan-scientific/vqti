@@ -6,12 +6,11 @@ Created on Wed May 11 12:13:55 2022
 @author: ellenyu
 
 Pending: 
-    
     * troubleshoot numba
     * realized in pandas implementations, mad is a rolling number. Incorporate in other functions as well
     * pass unit tests of equality between methods
     * estimate time complexity
-    * is there a best practices in terms of float precision? 
+    * is there a best practices in terms of precision? 
 """
 from vqti.load import load_eod 
 from vqti.profile import time_this 
@@ -233,7 +232,7 @@ if __name__ == '__main__':
     
     #Tests
     # Pandas methods equal each other
-    assert len(pandas_df.cci) == len (pandas_series), "Do not equal"
+    assert len(pandas_df.cci) == len (pandas_series), "Does not equal"
     for i in range(len(pandas_df.cci)):
         #print(i)
         np.testing.assert_equal(pandas_df.cci[i], pandas_series[i]), "Does not equal"
