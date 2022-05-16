@@ -1,5 +1,4 @@
-import sys
-sys.path.append('..\src')
+
 import math
 from vqti.load import load_eod
 from vqti.profile import time_this
