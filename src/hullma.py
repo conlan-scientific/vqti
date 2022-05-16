@@ -209,35 +209,35 @@ class TestWMA(unittest.TestCase):
 		truth_case_data = [np.NaN, np.NaN, np.NaN, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 		test_case = numpy_wma(np.array(input_data), m=4)
 		truth_case = np.array(truth_case_data)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
   
 	def test_numpy_matrix_wma(self):
 		input_data = [1,2,3,4,5,6,7,8,9,10]
 		truth_case_data = [np.NaN, np.NaN, np.NaN, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 		test_case = numpy_matrix_wma(np.array(input_data), m=4)
 		truth_case = np.array(truth_case_data)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
 	
 	def test_pandas_wma(self):
 		input_data = [1,2,3,4,5,6,7,8,9,10]
 		truth_case_data = [np.NaN, np.NaN, np.NaN, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 		test_case = pandas_wma(pd.Series(input_data), m=4)
 		truth_case = pd.Series(truth_case_data)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
   
 	def test_pandas_wma_2(self):
 		input_data = [1,2,3,4,5,6,7,8,9,10]
 		truth_case_data = [np.NaN, np.NaN, np.NaN, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 		test_case = pandas_wma_2(pd.Series(input_data), m=4)
 		truth_case = pd.Series(truth_case_data)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
   
 	def test_pandas_wma_3(self):
 		input_data = [1,2,3,4,5,6,7,8,9,10]
 		truth_case_data = [np.NaN, np.NaN, np.NaN, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 		test_case = pandas_wma_3(pd.Series(input_data), m=4)
 		truth_case = pd.Series(truth_case_data)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
   
 class TestHMA(unittest.TestCase):
  
@@ -253,21 +253,21 @@ class TestHMA(unittest.TestCase):
 		truth_case_data_hma = [np.NaN, np.NaN, np.NaN, np.NaN, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
 		test_case = numpy_hma(np.array(input_data), m=4)
 		truth_case = np.array(truth_case_data_hma)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
   
 	def test_numpy_matrix_hma(self):
 		input_data = [1,2,3,4,5,6,7,8,9,10]
 		truth_case_data_hma = [np.NaN, np.NaN, np.NaN, np.NaN, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
 		test_case = numpy_matrix_hma(np.array(input_data), m=4)
 		truth_case = np.array(truth_case_data_hma)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
   
 	def test_pandas_hma(self):
 		input_data = [1,2,3,4,5,6,7,8,9,10]
 		truth_case_data_hma = [np.NaN, np.NaN, np.NaN, np.NaN, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
 		test_case = pandas_hma(pd.Series(input_data), m=4)
 		truth_case = pd.Series(truth_case_data_hma)
-		self.assertEqual(test_case, truth_case)
+		np.testing.assert_array_equal(test_case, truth_case)
 
 if __name__ == '__main__':
 	
@@ -292,7 +292,7 @@ if __name__ == '__main__':
 	result = pandas_hma(df.close, 4)
 	print("Done!")
 	'''
-	# unittest.main()
+	unittest.main()
  
 	# pure python wma test
 	input_data = [1,2,3,4,5,6,7,8,9,10]
@@ -338,7 +338,7 @@ if __name__ == '__main__':
 	test_case = numpy_hma(np.array(input_data_hma), m=4)
 	truth_case = np.array(truth_case_data_hma)
 	assert np.allclose(test_case, truth_case, equal_nan=True), 'numpy_hma Test failed.'
- 
+  
 	# numpy matrix hma test
 	input_data = [1,2,3,4,5,6,7,8,9,10]
 	truth_case_data_hma = [np.NaN, np.NaN, np.NaN, np.NaN, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
