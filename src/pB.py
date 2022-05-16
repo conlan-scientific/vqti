@@ -1,5 +1,4 @@
-import sys
-sys.path.append('..\src')
+
 import math
 from vqti.load import load_eod
 from vqti.profile import time_this
@@ -13,7 +12,13 @@ from typing import List
 Bollinger Bands, %B, and Bandwidth
 """
 
-def python_pB (values: List[float], n: int = 2):
+# TODO: Write a pure python function for the SMA
+# TODO: Write a pure python function for the rolling standard deviation
+
+
+def python_pB (values: List[float], n: int = 4):
+    # TODO: Don't load data inside function
+    # TODO: The input should be a list of floats
 
     values = load_eod('AWU') # loads the dataframe in question
     value_range = values.loc[:,'close'] # loads only the values in a specific column. In this case, "close".
@@ -91,3 +96,5 @@ if __name__=="__main__":
     
     amov_result = python_pB(df)
     print (amov_result)
+
+    

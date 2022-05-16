@@ -144,15 +144,72 @@ def aroon_python_deque(high: List[float], low: List[float], p: int=25) -> List[f
 
 
 def test_python_deque_aroon():
+    # Test Case 1
+    print("Test Case 1")
     ground_truth_result = [None, -100.0, -100.0, -100.0, 0.0, -100.0, 100.0, 100.0, 100.0, 100.0]
     test_result = aroon_python_deque(
         [10,9,8,7,7,3,4,5,6,7],
         [10,9,8,7,7,3,4,5,6,7],
         p=1)
-    print(test_result)
     assert len(ground_truth_result) == len(test_result)
     for i in range(len(ground_truth_result)):
         assert ground_truth_result[i] == test_result[i]
+
+    # Test Case 2
+    print("Test Case 2")
+    ground_truth_result = [None, None, None, None, -100.0, -100.0, -75.0, -25.0, -25.0, 100]
+    test_result = aroon_python_deque(
+        [10,9,8,7,7,3,4,5,6,7],
+        [10,9,8,7,7,3,4,5,6,7],
+        p=4)
+    assert len(ground_truth_result) == len(test_result)
+    for i in range(len(ground_truth_result)):
+        assert ground_truth_result[i] == test_result[i]
+
+    # Test Case 3
+    print("Test Case 3")
+    ground_truth_result = [None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    test_result = aroon_python_deque(
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+        p=1)
+    assert len(ground_truth_result) == len(test_result)
+    for i in range(len(ground_truth_result)):
+        assert ground_truth_result[i] == test_result[i]
+
+    # Test Case 4
+    print("Test Case 4")
+    ground_truth_result = [None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    test_result = aroon_python_deque(
+        [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        p=1)
+    assert len(ground_truth_result) == len(test_result)
+    for i in range(len(ground_truth_result)):
+        assert ground_truth_result[i] == test_result[i]
+
+    # Test Case 5
+    print("Test Case 5")
+    ground_truth_result = [None, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
+    test_result = aroon_python_deque(
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        p=1)
+    assert len(ground_truth_result) == len(test_result)
+    for i in range(len(ground_truth_result)):
+        assert ground_truth_result[i] == test_result[i]
+
+    # Test Case 6
+    print("Test Case 6")
+    ground_truth_result = [None, -100.0, -100.0, -100.0, -100.0, -100.0, -100.0, -100.0, -100.0, -100.0]
+    test_result = aroon_python_deque(
+        [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+        [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+        p=1)
+    assert len(ground_truth_result) == len(test_result)
+    for i in range(len(ground_truth_result)):
+        assert ground_truth_result[i] == test_result[i]
+
 
 if __name__ == '__main__':
     df = load_eod('AWU')

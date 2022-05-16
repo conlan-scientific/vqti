@@ -6,10 +6,6 @@ import numpy as np
 from typing import List
 
 @time_this
-def get_the_cumsum(close: pd.Series) -> pd.Series:
-	return close.cumsum()
-
-@time_this
 def pure_python_sma(close: List[float], m: int=10) -> List[float]:
 	"""
 	This is an O(n) algorithm
@@ -24,15 +20,6 @@ def pure_python_sma(close: List[float], m: int=10) -> List[float]:
 		accum += close[i]
 		accum -= close[i-m]
 		result.append(accum / m)
-
-		# Speed improvements
-		# asdf
-		# asdf
-		# asdf
-		# asdf
-		# asdf
-		# asdf
-		# ads
 
 	return result
 
