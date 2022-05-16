@@ -35,26 +35,28 @@ def pure_python_smma(close: List[float], n: int = 10) -> List[float]:
     
     return prevSmma
 
+def relative_strength_index_calculation(rsf: int) -> int:
+    return (100 - (100/(1 + rsf)))
 
 # TODO: The return value of this function should be List[float]
 @time_this
-def pure_python_relative_stength_index(close: List[float], n: int = 10) -> float:
+def pure_python_relative_stength_index(close: List[float], n: int = 10) -> List[float]:
     upList, downList = up_down_factors(close)
     upSmmaList = pure_python_smma(upList, n)
     downSmmaList = pure_python_smma(downList, n)
 
     # TODO: The relative strength factor should be a List[float] of equal length
     # to the input. It is the element-wise ratio of SMMA-up and SMMA-down.
-    upSmmaTotal = sum(upSmmaList)
-    downSmmaTotal = sum(downSmmaList)
-    relativeStrengthFactor = upSmmaTotal/downSmmaTotal
-
-    # TODO: The result should be a List[float] of equal length to the input.
-    result = 100 - (100/ (1 + relativeStrengthFactor))
+    result = []
+    for x in range(n):
+        current_RSI = relative_strength_index_calculation(upSmmaList[x]/downSmmaList[x])
+        result.append(current_RSI)
 
     return result
 
-def pandas_relative_strength_index(close: List[float], n: int = 10) -> float:
+    # TODO: The result should be a List[float] of equal length to the input.
+
+def pandas_relative_strength_index(close: pd.Series, n: int = 10) -> List[float]:
     #it's the exact same but I think there is a way to do the smoothed moving average with pandas, not sure how though
     
     # TODO: The pandas version looks a lot different, because the optimal pandas
@@ -62,8 +64,11 @@ def pandas_relative_strength_index(close: List[float], n: int = 10) -> float:
     # 
     # Here is a hint.
     delta = close - close.shift(1)
-    up_series = delta.clip(lower=0)
-    # ... 
+    up_series = delta.clip(lower = 0)
+    delta2 = close.shift(1) - close
+    down_series = delta2.clip(lower = 0)
+    
+    #according to wikipedia, you use either use a smooth moving average or exponential moving average, unsure how to do either via pandas
     return 10
 
 
