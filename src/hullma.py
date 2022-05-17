@@ -6,7 +6,6 @@ import numpy as np
 from typing import List
 import unittest
 
-
 # HMA= WMA(2*WMA(n/2) − WMA(n)),sqrt(n))
 # recommended m = 4, 9, 16, 25, 49, 81
 
@@ -289,7 +288,7 @@ if __name__ == '__main__':
 	result = pandas_hma(df.close, 4)
 	print("Done!")
 	'''
-	unittest.main()
+	# unittest.main()
  
 	# pure python wma test
 	input_data = [1,2,3,4,5,6,7,8,9,10]
@@ -347,5 +346,4 @@ if __name__ == '__main__':
 	test_case = pandas_hma(pd.Series(input_data_hma), m=4)
 	truth_case = pd.Series(truth_case_data_hma)
 	assert np.allclose(test_case, truth_case, equal_nan=True), 'pandas_hma Test failed.'
- 
  
