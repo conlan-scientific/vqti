@@ -11,15 +11,26 @@ To do:
     - write a signal converter function 
         - tehcnically, I should visualize and analyze the results  
 """
+import pandas as pd
+from vqti.load import load_eod
 
-
-def signals_generator (function, myinput, st_dev):
+def signals_generator (series: pd.Series, std: int = 2) -> pd.Series:
     
-    # run function on df
+    # Calculate the standard deviation
+    series_std = series.std()
+    print('series std:', series_std, '\n')
     
-    # calculates the std 
+    # Generate buy and sell signals
+    signals = 1 * (series > std * series_std) - 1 * (std * series_std < 0)
+    print('signals:', signals, '\n')
+    print(signals.value_counts())
     
-    # sell signal if > 2 std  above mean 
+    assert type(signals) == pd.Series, "Output array is not same type as input array"
+    assert len(signals) == len(series), "Output array is not same length as input array"
     
-    # buy signal if > 2 std below mean 
+if __name__ == '__main__':
     
+    df = load_eod('AWU')
+    #print(df.head())
+    
+    signals_generator(df.close)
