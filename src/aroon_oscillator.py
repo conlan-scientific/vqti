@@ -211,6 +211,24 @@ def test_python_deque_aroon():
         assert ground_truth_result[i] == test_result[i]
 
 
+def aroon_signal_line(aroon_oscillator: pd.Series) -> pd.Series:
+    '''
+    :param aroon_oscillator: `pandas` Series representing the Aroon Oscillator fluctuating between 100 and -100
+    :return: Returns a `pandas` Series representing buy (1), sell (-1), or do nothing (0).
+    '''
+    return aroon_oscillator // 100
+
+
+def test_aroon_signal_line():
+    '''
+    Tests `aroon_signal_line()` function.
+    '''
+    ground_truth_result = pd.Series([None, None, -1, 1, 0, 0, 0, 0])
+    test_result = aroon_signal_line(pd.Series([None, None, -100.0, 100, 50, 50, 0, 99]))
+    assert len(ground_truth_result) == len(test_result)
+    assert ground_truth_result.equals(test_result)
+
+
 if __name__ == '__main__':
     df = load_eod('AWU')
     # print(df)
@@ -223,8 +241,23 @@ if __name__ == '__main__':
     # test_python_deque_aroon()
 
 
-    result: List = aroon_python_basic(df.high.tolist(), df.low.tolist())
+    # result: List = aroon_python_basic(df.high.tolist(), df.low.tolist())
     result: List = aroon_python_deque(df.high.tolist(), df.low.tolist())
 
     # test_pandas_aroon()
     #result: pd.Series = aroon_pandas(df.high, df.low)
+
+    test_aroon_signal_line()
+    result_df = df
+    result_df['aroon'] = result
+    # Signal Line strategy:
+    # Buy when Aroon == 100 (indicates a sustained upward trend)
+    # Sell when Aroon == -100 (indicates a sustained downwards trend)
+    result_df['signal_line'] = result_df['aroon'] // 100
+
+    result_df.high.plot()
+    result_df.low.plot()
+    result_df.aroon.plot()
+    result_df.signal_line.apply(lambda x: 50 * (x-3)).plot()
+    plt.show()
+

@@ -22,12 +22,21 @@ if __name__ == '__main__':
 	df = df.assign(percent_b=percent_b)
 
 
+	starting_cash = 10000
+	shares_to_buy = starting_cash / df.close.iloc[0]
+	shares_to_buy = int(shares_to_buy)
+	money_to_spend = shares_to_buy * df.close.iloc[0]
+	starting_cash -= money_to_spend
+	portfolio_value = shares_to_buy * df.close
+	cash = pd.Series(starting_cash, index=df.index)
+	equity_series = cash + portfolio_value
+	calculate_sharpe_ratio(equity_series)
 
 
-
-
-
-
+	# Convert your technical indicator into a signal line
+	# Takes technical indicator in, and spit out 1's, 0's, and -1's that 
+	# correspond to buy, do nothing, and sell.
+	signal_line = 1 * (percent_b > 100) - 1 * (percent_b < 0)
 
 
 
