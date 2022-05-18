@@ -15,6 +15,20 @@ import pandas as pd
 from vqti.load import load_eod
 
 def signals_generator (series: pd.Series, std: int = 2) -> pd.Series:
+    '''
+
+    Parameters
+    ----------
+    series : pd.Series
+        this function takes a moving metric series.
+    std : int, optional
+        std is loosely bounded between 1 and 4. A std of 1 means high risk. A std of 3 means low risk. The default is 2.
+
+    Returns
+    -------
+    a pd.Series of buy and sell signals denoted as '1' and '0'.
+
+    '''
     
     # Calculate the standard deviation
     series_std = series.std()
@@ -33,4 +47,4 @@ if __name__ == '__main__':
     df = load_eod('AWU')
     #print(df.head())
     
-    signals_generator(df.close)
+    signals_generator(df.close, std=4)
