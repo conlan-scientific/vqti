@@ -223,8 +223,22 @@ if __name__ == '__main__':
     # test_python_deque_aroon()
 
 
-    result: List = aroon_python_basic(df.high.tolist(), df.low.tolist())
+    # result: List = aroon_python_basic(df.high.tolist(), df.low.tolist())
     result: List = aroon_python_deque(df.high.tolist(), df.low.tolist())
 
     # test_pandas_aroon()
     #result: pd.Series = aroon_pandas(df.high, df.low)
+
+    result_df = df
+    result_df['aroon'] = result
+    # Signal Line strategy:
+    # Buy when Aroon == 100 (indicates a sustained upward trend)
+    # Sell when Aroon == -100 (indicates a sustained downwards trend)
+    result_df['signal_line'] = result_df['aroon'] // 100
+
+    result_df.high.plot()
+    result_df.low.plot()
+    result_df.aroon.plot()
+    result_df.signal_line.apply(lambda x: 50 * (x-3)).plot()
+    plt.show()
+
