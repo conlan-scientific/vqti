@@ -33,6 +33,9 @@ def pandas_df_cci(df: pd.DataFrame, window: int=20) -> pd.DataFrame:
     #print(df.head(21), '\n')
 
     # Put it all together 
+
+    # 1st order calculation expressed in MAD Z-score units
+    # TODO: Remove lambert's constant everywhere for easy interpretation
     df['cci'] = (df['close'] - df['sma']) / (0.015 * df['mad']) # 0.015 is Lambert's constant 
     #print(df.head(21), '\n')
     

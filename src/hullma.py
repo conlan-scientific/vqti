@@ -44,6 +44,9 @@ def pure_python_wma(values: List[float], m: int=10)-> List[float]:
 
 # @time_this
 def pure_python_hma(values: List[float], m: int=10) -> List[float]:
+	"""
+	This is a smoothed 0th order calculation expressed in dollars per share
+	"""
 	assert m >= 1, 'Period must be a positive integer'
 	assert type(m) is int, 'Period must be a positive integer'
 	assert len(values) >= m, 'Values must be >= period m'

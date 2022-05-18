@@ -48,3 +48,5 @@ if __name__ == '__main__':
     #print(df.head())
     
     signals_generator(df.close, std=4)
+
+    # If CCI > 3 then buy if CCI < -2 sell

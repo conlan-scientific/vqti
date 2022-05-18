@@ -15,11 +15,11 @@ def up_down_factors(close: List[float]):
     downList.append(close[0])
     for x in range(1, len(close)):
         if (close[x] - close[x-1]) > 0:
-            upList.append(close[x] - close[x-1])
+            upList.append(close[x] - close[x-1]) # This is a first order calc
             downList.append(0)
         else:
             upList.append(0)
-            downList.append(close[x-1] - close[x])
+            downList.append(close[x-1] - close[x]) # This is a first order calc
     return upList, downList
 
 
@@ -36,20 +36,23 @@ def pure_python_smma(close: List[float], n: int = 10) -> List[float]:
     return prevSmma
 
 def relative_strength_index_calculation(rsf: int) -> int:
+    # This forces the range into 0 to 100
     return (100 - (100/(1 + rsf)))
 
 # TODO: The return value of this function should be List[float]
 @time_this
 def pure_python_relative_stength_index(close: List[float], n: int = 10) -> List[float]:
-    upList, downList = up_down_factors(close)
-    upSmmaList = pure_python_smma(upList, n)
-    downSmmaList = pure_python_smma(downList, n)
+    upList, downList = up_down_factors(close) # Units are change-in-dollars
+    upSmmaList = pure_python_smma(upList, n) # Units are change-in-dollars
+    downSmmaList = pure_python_smma(downList, n) # Units are change-in-dollars
 
     # TODO: The relative strength factor should be a List[float] of equal length
     # to the input. It is the element-wise ratio of SMMA-up and SMMA-down.
     result = []
     for x in range(n):
-        current_RSI = relative_strength_index_calculation(upSmmaList[x]/downSmmaList[x])
+        # This is a ratio, range is 0 to infinity
+        relative_strength_factor = upSmmaList[x] / downSmmaList[x]
+        current_RSI = relative_strength_index_calculation(relative_strength_factor)
         result.append(current_RSI)
 
     return result
@@ -77,4 +80,7 @@ if __name__ == '__main__':
 
     df = load_eod('AWU')
     result = pure_python_relative_stength_index(df.close)
+
+    # Thresholds of 30 and 70 are standardized
+    # Thresholds in general are standardized
 

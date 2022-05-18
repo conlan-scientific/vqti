@@ -253,7 +253,10 @@ if __name__ == '__main__':
     # Signal Line strategy:
     # Buy when Aroon == 100 (indicates a sustained upward trend)
     # Sell when Aroon == -100 (indicates a sustained downwards trend)
-    result_df['signal_line'] = result_df['aroon'] // 100
+    # TODO: Parameterize
+    # 1st order calculation expressed in time units
+    result_df['signal_line'] = result_df['aroon'] // 100 # Shortest homework solution award
+
 
     result_df.high.plot()
     result_df.low.plot()

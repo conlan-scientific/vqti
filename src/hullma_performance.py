@@ -24,6 +24,14 @@ def hma_trend_signal(series: pd.Series) -> pd.Series:
     signal = np.where(series > series.shift(1), 1, 0)
     signal = np.where(series < series.shift(1), -1, signal)
     return signal
+
+"""
+Standardization ideas (also signal line ideas)
++ Using trends and signs
++ Crossover of two different HMAs
++ Crossover of an HMA and the price
++ Difference between two HMAs divided by volatility (z-score units) (similar to MACD)
+"""
     
     
 if __name__ == '__main__':
