@@ -54,13 +54,14 @@ def pure_python_relative_stength_index(close: List[float], n: int = 10) -> List[
         relative_strength_factor = upSmmaList[x] / downSmmaList[x]
         current_RSI = relative_strength_index_calculation(relative_strength_factor)
         result.append(current_RSI)
+    
+    assert (len(close) == len(result))
 
     return result
 
     # TODO: The result should be a List[float] of equal length to the input.
 
 def pandas_relative_strength_index(close: pd.Series, n: int = 10) -> List[float]:
-    #it's the exact same but I think there is a way to do the smoothed moving average with pandas, not sure how though
     
     # TODO: The pandas version looks a lot different, because the optimal pandas
     # approach will rely on vectorized operations.
@@ -72,8 +73,11 @@ def pandas_relative_strength_index(close: pd.Series, n: int = 10) -> List[float]
     down_series = delta2.clip(lower = 0)
     
     #according to wikipedia, you use either use a smooth moving average or exponential moving average, unsure how to do either via pandas
-    return 10
+    up_series_ema = up_series.ewm(span = 30, adjust = False).mean()
+    down_series_ema = down_series.ewm(span = 30, adjust = False).mean()
 
+    relative_strength_factor = up_series_ema.div(down_series_ema)
+    return relative_strength_factor.rolling(window = n).apply(lambda x: relative_strength_index_calculation(x))
 
 if __name__ == '__main__':
 
