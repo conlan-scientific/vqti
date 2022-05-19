@@ -5,12 +5,12 @@ Created on Wed May 11 12:13:55 2022
 
 @author: ellenyu
 
-Pending: 
-    * troubleshoot numba
-    * realized in pandas implementations, mad is a rolling number. Incorporate in other functions as well
-    * pass unit tests of equality between methods
-    * estimate time complexity
-    * is there a best practices in terms of precision? 
+To do's:
+    * Troubleshoot numba implementation 
+    * Realized in pandas implementations, mad is a rolling number. Incorporate in other functions as well - Complete for key functions of 5/18/22
+    * Pass unit tests of quality between methods and against truth case - Complete for key functions as of 5/18/22 
+    * Estimate time complexity
+    * Is there a best practices in terms of float precision?
 """
 from vqti.load import load_eod 
 from vqti.profile import time_this 

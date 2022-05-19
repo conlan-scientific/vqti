@@ -4,11 +4,12 @@
 Created on Fri May 13 12:04:12 2022
 
 The following are rolling sum aka moving sum functions that can be adapted to become 
-moving average functions or cut down to be rolling window functions. 
+moving average functions or pared down to be rolling window functions. 
 
-Pending - program something to handle when user enters window = 0 
-Pending - check that input and output are all in terms of floats. Is this best practice? How to denote in type hint e.g. list of floats? 
-Pending - address the workarounds so, I can extract rolling function from rollingsum function
+Pending: 
+    * Program something to handle when users enter window = 0 or window = negative number
+    * How do I denote via type hints that it is a pd.Series of floats? 
+    * Address the work arounds so, I can extract rolling functions from rollingsum functions
 
 @author: ellenyu
 
@@ -407,7 +408,6 @@ if __name__ == '__main__':
     
     truth_lists = [truth_list_1, truth_list_2, truth_list_3]
     #print(truth_lists)   
-    
     
     
     for window in range(1, 4, 1): 
