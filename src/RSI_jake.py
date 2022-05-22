@@ -79,6 +79,16 @@ def pandas_relative_strength_index(close: pd.Series, n: int = 10) -> List[float]
     relative_strength_factor = up_series_ema.div(down_series_ema)
     return relative_strength_factor.rolling(window = n).apply(lambda x: relative_strength_index_calculation(x))
 
+def signal_line_calculation(calculation_list: List[float]) -> List[float]:
+    result = []
+    for x in calculation_list:
+        if (x < 30):
+            result.append(1)
+        if (x > 70):
+            result.append(-1)
+        else:
+            result.append(0)
+
 if __name__ == '__main__':
 
 
