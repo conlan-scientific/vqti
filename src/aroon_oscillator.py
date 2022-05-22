@@ -92,7 +92,7 @@ def test_pandas_aroon():
     for i in range(len(ground_truth_result)):
         assert ground_truth_result[i] == test_result[i]
 
-@time_this
+# @time_this
 def aroon_python_deque(high: List[float], low: List[float], p: int=25) -> List[float]:
     """
     This is an O(n) algorithm for lists of length n and lookback of p
