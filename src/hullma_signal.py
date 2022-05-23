@@ -49,7 +49,7 @@ if __name__ == '__main__':
     # plt.show()
     
 
-    os.chdir('data\eod')
+    os.chdir(os.path.join('..', 'data', 'eod'))
     extension = 'csv'
     all_filenames = [i for i in glob.glob('*.{}'.format(extension))] # creates a list of symbols.csv
     stock_symbols = [i.replace('.csv', '') for i in all_filenames] # removes .csv from end of symbols
@@ -125,10 +125,10 @@ if __name__ == '__main__':
                 portfolio.append(stock)
                 stocks_im_holding[f'{stock}'] =  shares_bought
     
-    equity_curve[date] = cash + portfolio_value
+        equity_curve[date] = cash + portfolio_value
 
     # Plot the equity curve
-    plt.plot(equity_curve.values())
+    plt.plot(pd.Series(equity_curve))
     plt.show()
     # Measure the sharpe ratio
     # You're done.
