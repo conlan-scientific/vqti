@@ -38,12 +38,15 @@ Standardization ideas (also signal line ideas)
 if __name__ == '__main__':
 
     df = load_eod('AWU')
-    
-    
     df['signal'] = hma_trend_signal(df.close, 16)
-    
-    print(df.iloc[:40])
-
+    # print(df.iloc[:40])
+    # plt.grid(True, alpha = 0.3)
+    # plt.plot(df.iloc[-252:]['close'], label='close')
+    # plt.plot(df.iloc[-252:]['hull_ma'], label='hma')
+    # plt.plot(df.iloc[-252:]['weighted_ma'], label='wma')
+    # plt.plot(df.iloc[-252:]['signal'] * 100, label='signal')
+    # plt.legend(loc=2)
+    # plt.show()
     
 
     os.chdir('data\eod')
@@ -63,6 +66,7 @@ if __name__ == '__main__':
             index_col='date', 
             usecols=['date', 'close'], 
             parse_dates=['date'],
+            dtype='float64'
         ).rename(
             columns={
                 'date': 'date', 
@@ -83,24 +87,53 @@ if __name__ == '__main__':
     print(signal_df)
     assert prices_df.index.equals(signal_df.index)
     
-    # plt.grid(True, alpha = 0.3)
-    # plt.plot(df.iloc[-252:]['close'], label='close')
-    # plt.plot(df.iloc[-252:]['hull_ma'], label='hma')
-    # plt.plot(df.iloc[-252:]['weighted_ma'], label='wma')
-    # plt.plot(df.iloc[-252:]['signal'] * 100, label='signal')
-    # plt.legend(loc=2)
-    # plt.show()
-     
-    starting_cash = 10000
-    shares_to_buy = starting_cash / df.close.iloc[0]
-    shares_to_buy = int(shares_to_buy)
-    money_to_spend = shares_to_buy * df.close.iloc[0]
-    starting_cash -= money_to_spend
-    portfolio_value = shares_to_buy * df.close
-    cash = pd.Series(starting_cash, index=df.index)
-    equity_series = cash + portfolio_value
-    calculate_sharpe_ratio(equity_series)
+    max_assets = 20
+    dt_index = prices_df.index
+    starting_cash = int(100000)
+    portfolio: List[str] = list()
+    equity_curve = dict()
+    portfolio_value = 0
+    cash = starting_cash
     
+# Pretend you are walking through time trading over the course of ten years
+    for date in signal_df.index:
+        signals = signal_df.loc[date] 
+        stocks_im_going_to_buy: List[str] = signals[signals == 1].index.tolist()
+        stocks_im_going_to_sell: List[str] = signals[signals == -1].index.tolist()
+        stocks_im_holding = {}
+        
+	    # Mess with your cash and portfolio to sell stocks
+        if not stocks_im_holding:
+            pass
+        else:
+            for stock in stocks_im_going_to_sell:
+                if stock in stocks_im_holding:
+                    shares_sold = prices_df.loc[date][f'{stock}'] * stocks_im_holding.get(stock)
+                    cash += shares_sold
+                    stocks_im_holding.pop(stock)
+                else:
+                    pass
+
+        if (len(stocks_im_holding) < max_assets) and (cash > 0):
+            for stock in stocks_im_going_to_buy:
+		    # This is the "compound your gains and losses" approach to cash management
+		    # Also called the "fixed number of slots" approach
+                cash_to_spend = cash / (max_assets - len(stocks_im_holding))
+                shares_bought = cash_to_spend / prices_df.loc[date][f'{stock}']
+                cash -= shares_bought
+                portfolio_value += shares_bought * prices_df.loc[date][f'{stock}']
+                portfolio.append(stock)
+                stocks_im_holding[f'{stock}'] =  shares_bought
+    
+    equity_curve[date] = cash + portfolio_value
+
+    # Plot the equity curve
+    plt.plot(equity_curve.values())
+    plt.show()
+    # Measure the sharpe ratio
+    # You're done.
+
+
 
 
 
