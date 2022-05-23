@@ -150,41 +150,41 @@ class TradingSimulator():
         return (cagr - benchmark_rate) / volatility
 
     def run(self, signals_df: pd.DataFrame) -> None:
+        """
+        Simulate performance based upon buy/sell signals in input `signals_df`.
+        """
         equity_curve = {}
+        # Loop through days in price dataframe.
         dt_index = self.price_df.index
-        counter = 0
         for dt in dt_index:
             self.current_dt = dt
-            # print(dt)
+
+            # If stock is in portfolio: sell if signal is -1, or list to buy if signal is 1
             signals = signals_df.loc[dt]
-            # print(signals)
             stocks_to_sell: List[str] = [s for s in signals[signals == -1].index.tolist() if s in self.portfolio]
             stocks_to_buy: List[str] = [s for s in signals[signals == 1].index.tolist() if s not in self.portfolio]
+
+            # Sell all held stocks marked for sale
             for stock in stocks_to_sell:
                 self._sell_stock(stock, fraction=1)
+
+            # Calculate how many asset slots are available, and thus how many
             free_asset_slots = self.max_assets - len(self.portfolio.keys())
             num_stocks_to_buy = min(len(stocks_to_buy), free_asset_slots)
+
+            # Buy stocks
             if num_stocks_to_buy > 0:
+                # Spend 99% of free cash equally on stocks to be bought, but don't spend more than $10,000
                 available_cash_per_asset = 0.99 * self.cash / num_stocks_to_buy
                 if available_cash_per_asset > 10000:
                     available_cash_per_asset = 10000
                 for stock in stocks_to_buy:
+                    # Loop through stocks to buy until done, or until all asset slots are filled.
                     if len(self.portfolio.keys()) <= self.max_assets:
                         self._buy_stock(stock, available_cash_per_asset)
-            equity_curve[dt] = self.cash + self._portfolio_value()
 
-            # print(stocks_im_going_to_buy, stocks_im_going_to_sell)
-            # stocks_im_holding: List[str]  # This is determined by which stocks you bought previously
-            # counter +=1
-            # if counter > 23:
-            #     pass
-            # if counter > 28:
-            #     print("Stop date", dt)
-            #     print("Stop signals:", sorted(signals))
-            #     print("To sell:", stocks_to_sell)
-            #     print("To buy:", stocks_to_buy)
-            #     print(self.portfolio)
-            #     break
+            # Update equity curve
+            equity_curve[dt] = self.cash + self._portfolio_value()
         self.equity_curve = pd.Series(equity_curve)
         self.equity_curve.index = pd.to_datetime(self.equity_curve.index)
         self.sharpe_ratio = self._calculate_sharpe_ratio(self.equity_curve)
@@ -192,15 +192,23 @@ class TradingSimulator():
 if __name__ == "__main__":
     eod_data_dir: Path = Path(__file__).parent.parent / "data" / "eod"
 
+    # Load eod CSV files into custom HistoricalData class
     hd: HistoricalData = HistoricalData()
     hd.load_data(eod_data_dir)
 
+    # Calculate signals based upon Aroon Oscillator
     signal_calc: SignalCalculator = SignalCalculator()
     signal_df: pd.DataFrame = signal_calc.calculate_signals(hd)
 
+    # Simulate historical performance
     sim = TradingSimulator(hd)
     sim.run(signal_df)
-    print("Sharpe Ratio", sim.sharpe_ratio)
-    sim.equity_curve.plot()
 
+    # Get simulation results
+    print("Sharpe Ratio:", sim.sharpe_ratio)
+    sim.equity_curve.plot(
+        title = f"Equity curve based on Aroon Oscillator, Sharpe={round(sim.sharpe_ratio, 3)}",
+        ylabel = "$",
+        xlabel = "Date"
+    )
     plt.show()
