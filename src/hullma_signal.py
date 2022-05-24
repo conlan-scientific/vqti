@@ -134,7 +134,6 @@ if __name__ == '__main__':
     # plt.plot(equity_curve_df)
     # plt.show()
     # Measure the sharpe ratio
-    print(calculate_sharpe_ratio(equity_curve_df, 0))
 
 
 
