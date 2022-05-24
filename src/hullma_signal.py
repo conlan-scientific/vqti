@@ -49,7 +49,7 @@ if __name__ == '__main__':
     # plt.show()
     
 
-    os.chdir('data\eod')
+    os.chdir(os.path.join('..', 'data', 'eod'))
     extension = 'csv'
     all_filenames = [i for i in glob.glob('*.{}'.format(extension))] # creates a list of symbols.csv
     stock_symbols = [i.replace('.csv', '') for i in all_filenames] # removes .csv from end of symbols
@@ -116,6 +116,7 @@ if __name__ == '__main__':
         if (len(stocks_im_holding) < max_assets) and (cash > 0):
             cash_to_spend = cash / (max_assets - len(stocks_im_holding))
             for stock in stocks_im_going_to_buy:
+<<<<<<< HEAD
                 if (len(stocks_im_holding) < max_assets) and (cash > 0):
                     # This is the "compound your gains and losses" approach to cash management
                     # Also called the "fixed number of slots" approach
@@ -133,6 +134,22 @@ if __name__ == '__main__':
     print(equity_curve_df.head())
     # plt.plot(equity_curve_df)
     # plt.show()
+=======
+		    # This is the "compound your gains and losses" approach to cash management
+		    # Also called the "fixed number of slots" approach
+                cash_to_spend = cash / (max_assets - len(stocks_im_holding))
+                shares_bought = cash_to_spend / prices_df.loc[date][f'{stock}']
+                cash -= shares_bought
+                portfolio_value += shares_bought * prices_df.loc[date][f'{stock}']
+                portfolio.append(stock)
+                stocks_im_holding[f'{stock}'] =  shares_bought
+    
+        equity_curve[date] = cash + portfolio_value
+
+    # Plot the equity curve
+    plt.plot(pd.Series(equity_curve))
+    plt.show()
+>>>>>>> 9c4eead00783341f9307a214045c163ae0ecb678
     # Measure the sharpe ratio
 
 
