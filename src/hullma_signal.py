@@ -87,22 +87,21 @@ if __name__ == '__main__':
     print(signal_df)
     assert prices_df.index.equals(signal_df.index)
     
-    max_assets = 20
+    max_assets = 5
     dt_index = prices_df.index
     starting_cash = int(100000)
     portfolio: List[str] = list()
-    equity_curve = dict()
     portfolio_value = 0
     cash = starting_cash
-    
-# Pretend you are walking through time trading over the course of ten years
+    equity_curve = {}
+    stocks_im_holding = {}
+    # Pretend you are walking through time trading over the course of ten years
     for date in signal_df.index:
         signals = signal_df.loc[date] 
         stocks_im_going_to_buy: List[str] = signals[signals == 1].index.tolist()
         stocks_im_going_to_sell: List[str] = signals[signals == -1].index.tolist()
-        stocks_im_holding = {}
         
-	    # Mess with your cash and portfolio to sell stocks
+        # Mess with your cash and portfolio to sell stocks
         if not stocks_im_holding:
             pass
         else:
@@ -115,23 +114,27 @@ if __name__ == '__main__':
                     pass
 
         if (len(stocks_im_holding) < max_assets) and (cash > 0):
+            cash_to_spend = cash / (max_assets - len(stocks_im_holding))
             for stock in stocks_im_going_to_buy:
-		    # This is the "compound your gains and losses" approach to cash management
-		    # Also called the "fixed number of slots" approach
-                cash_to_spend = cash / (max_assets - len(stocks_im_holding))
-                shares_bought = cash_to_spend / prices_df.loc[date][f'{stock}']
-                cash -= shares_bought
-                portfolio_value += shares_bought * prices_df.loc[date][f'{stock}']
-                portfolio.append(stock)
-                stocks_im_holding[f'{stock}'] =  shares_bought
-    
-    equity_curve[date] = cash + portfolio_value
-
+                if (len(stocks_im_holding) < max_assets) and (cash > 0):
+                    # This is the "compound your gains and losses" approach to cash management
+                    # Also called the "fixed number of slots" approach
+                    shares_bought = cash_to_spend / prices_df.loc[date][f'{stock}']
+                    cash -= shares_bought * prices_df.loc[date][f'{stock}']
+                    portfolio_value += shares_bought * prices_df.loc[date][f'{stock}']
+                    portfolio.append(stock)
+                    stocks_im_holding[f'{stock}'] =  shares_bought
+        
+        equity_curve[f'{date}'] = cash + portfolio_value
+                
+    equity_curve_df = pd.Series(equity_curve, name = 'total_equity', dtype = float)
+    equity_curve_df.index.name = 'Date'
     # Plot the equity curve
-    plt.plot(equity_curve.values())
-    plt.show()
+    print(equity_curve_df.head())
+    # plt.plot(equity_curve_df)
+    # plt.show()
     # Measure the sharpe ratio
-    # You're done.
+    print(calculate_sharpe_ratio(equity_curve_df, 0))
 
 
 
