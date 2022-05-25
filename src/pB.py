@@ -36,7 +36,7 @@ def python_stddev (values, n) -> List [float]:
     dev = 0
     var = 0
     stddev = []
-    z = 0
+    z = 0 
 
     ave = python_sma(values, n) #Calls the simple moving average function into the standard deviation function
     

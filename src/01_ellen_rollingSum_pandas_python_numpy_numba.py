@@ -8,7 +8,6 @@ moving average functions or pared down to be rolling window functions.
 
 Pending: 
     * Program something to handle when users enter window = 0 or window = negative number
-    * How do I denote via type hints that it is a pd.Series of floats? 
     * Address the work arounds so, I can extract rolling functions from rollingsum functions
     * Create a numbas implementation and negative test cases 
 

@@ -1,3 +1,6 @@
+# I added this on 5-24-22. Apologies if this is a bad thing to do, - Ellen  
+*.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

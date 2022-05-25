@@ -6,7 +6,7 @@ Created on Tue May 17 17:02:38 2022
 @author: ellenyu
 
 Pending: 
-    * Visually inspect various signal lines 
+    * Visually inspect various signal lines - completed on May 25, 2022
     * Visualize the implemented signal line 
     * Raise an error if the input series is vastly different from normal distribution
     * Address the questions I've denoted below
@@ -16,6 +16,7 @@ import pandas as pd
 from vqti.load import load_eod
 from cci_ellen import *
 from load_ellen import *
+from cci_ellen import *
 
 #??? Tried to implement my thoughts into code as much as possible. I'm going to leave it be for now, but come back to my questions below at some point
 def normal_distribution_signals_generator(series: pd.Series, num_std: int = 2) -> pd.Series:
@@ -207,3 +208,9 @@ if __name__ == '__main__':
     #Across the tickers, the original cci has an average std of 108 with a std of 2 so, use the modified cci 
     #Across the tickers, the modified cci has an average mean of 0.257 with a std of .121
     #Across the tickers, the modified cci has an average std of 1.632 with a std of .030 so, a little bigger than the z-score std of 1 
+
+#%% 
+# [5-24-22] Visualizing indicator to better understand why it performed poorly in simulation 
+plt.plot(df.close)
+plt.plot(cci_signals_generator(pandas_series_ccimodified_rolling(df.close))*100)
+plt.show()
