@@ -70,6 +70,7 @@ class TradingSimulator():
         self.current_assets = 0
         self.cash = starting_cash
         self.price_df = self._get_price_df(hd)
+        self.price_df.index = pd.to_datetime(self.price_df.index)
         self.portfolio = {}
 
     def _get_price_df(self, hd: HistoricalData):
@@ -144,15 +145,16 @@ class TradingSimulator():
         """
         From Algorithmic Trading with Python p.27
         """
-        cagr = self._calculate_cagr(price_series)
+        self.cagr = self._calculate_cagr(price_series)
         return_series = self._calculate_return_series(price_series)
-        volatility = self._calculate_annualized_volatility(return_series)
-        return (cagr - benchmark_rate) / volatility
+        self.volatility = self._calculate_annualized_volatility(return_series)
+        return (self.cagr - benchmark_rate) / self.volatility
 
     def run(self, signals_df: pd.DataFrame) -> None:
         """
         Simulate performance based upon buy/sell signals in input `signals_df`.
         """
+        signals_df.index = pd.to_datetime(signals_df.index)
         equity_curve = {}
         # Loop through days in price dataframe.
         dt_index = self.price_df.index
@@ -206,9 +208,15 @@ if __name__ == "__main__":
 
     # Get simulation results
     print("Sharpe Ratio:", sim.sharpe_ratio)
+    print("CAGR:", sim.cagr)
+    print("Volatility:", sim.volatility)
     sim.equity_curve.plot(
         title = f"Equity curve based on Aroon Oscillator, Sharpe={round(sim.sharpe_ratio, 3)}",
         ylabel = "$",
         xlabel = "Date"
     )
     plt.show()
+
+    # print("AWU:", sim._calculate_sharpe_ratio(sim.price_df.AWU))
+    # print("BMG:", sim._calculate_sharpe_ratio(sim.price_df.BMG))
+    # print("CUU:", sim._calculate_sharpe_ratio(sim.price_df.CUU))
