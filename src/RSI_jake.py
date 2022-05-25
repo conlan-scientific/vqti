@@ -79,7 +79,7 @@ def pandas_relative_strength_index(close: pd.Series, n: int = 10) -> List[float]
     relative_strength_factor = up_series_ema.div(down_series_ema)
     return relative_strength_factor.rolling(window = n).apply(lambda x: relative_strength_index_calculation(x))
 
-def RSI_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
+def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
     calculation_list = pure_python_relative_stength_index(close, n)
     result = []
     for x in calculation_list:
