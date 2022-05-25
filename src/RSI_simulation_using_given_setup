@@ -2,6 +2,19 @@ from pypm import metrics, signals, data_io, simulation
 from typing import List
 import pandas as pd
 
+
+def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
+    calculation_list = pure_python_relative_stength_index(close, n)
+    result = []
+    for x in calculation_list:
+        if (x < 30):
+            result.append(1)
+        if (x > 70):
+            result.append(-1)
+        else:
+            result.append(0)
+    return result
+
 # Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
