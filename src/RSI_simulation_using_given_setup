@@ -34,7 +34,7 @@ def relative_strength_index_calculation(rsf: int) -> int:
     return (100 - (100/(1 + rsf)))
 
 # TODO: The return value of this function should be List[float]
-def pure_python_relative_stength_index(close: List[float], n: int = 10) -> List[float]:
+def pure_python_relative_strength_index(close: List[float], n: int = 10) -> List[float]:
     upList, downList = up_down_factors(close) # Units are change-in-dollars
     upSmmaList = pure_python_smma(upList, n) # Units are change-in-dollars
     downSmmaList = pure_python_smma(downList, n) # Units are change-in-dollars
@@ -52,8 +52,11 @@ def pure_python_relative_stength_index(close: List[float], n: int = 10) -> List[
 
     return result
 
-def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
-    calculation_list = pure_python_relative_stength_index(close, n)
+
+
+def rsi_signal_line_calculation(close: List[float]) -> List[float]:
+    calculation_list = pure_python_relative_strength_index(close)
+    print(calculation_list)
     result = []
     for x in calculation_list:
         if (x < 30):
