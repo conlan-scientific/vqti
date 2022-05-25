@@ -42,7 +42,7 @@ def pure_python_relative_strength_index(close: List[float], n: int = 10) -> List
     # TODO: The relative strength factor should be a List[float] of equal length
     # to the input. It is the element-wise ratio of SMMA-up and SMMA-down.
     result = []
-    for x in range(n):
+    for x in range(len(close)):
         # This is a ratio, range is 0 to infinity
         relative_strength_factor = upSmmaList[x] / downSmmaList[x]
         current_RSI = relative_strength_index_calculation(relative_strength_factor)
