@@ -642,17 +642,21 @@ if __name__ == '__main__':
         date = row.Index
         price = row.close
         s = row.signal
-        stocks_im_holding = []
+        stocks_im_holding = {}
+        # stocks_im_holding = []
 
         if s == 1:
             pos = Position(symbol, date, price, shares_to_buy)
-            stocks_im_holding.append(pos)
+            stocks_im_holding[symbol] = pos
+            # stocks_im_holding.append(pos)
         if not stocks_im_holding:
             pass
         else:
             if s == 0:
+                pos = stocks_im_holding[symbol]
                 pos.record_price_update(date, price)
             elif s == -1:
+                pos = stocks_im_holding[symbol]
                 pos.exit(date, price)
 
     pos.print_position_summary()
