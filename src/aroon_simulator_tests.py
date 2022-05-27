@@ -10,16 +10,16 @@ class HistoricalDataTestCase(unittest.TestCase):
 
     def test_read_csv(self):
         test_file: Path = Path(__file__).parent.parent / "data" / "eod" / "AWU.csv"
-        hd_df: pd.DataFrame = HistoricalData()._read_csv(test_file)
+        hd_df: pd.DataFrame = HistoricalData()._read_eod_dir_csv(test_file)
         self.assertIn("AWU_high", hd_df.columns)
         self.assertIn("AWU_low", hd_df.columns)
-        self.assertEqual(len(hd_df.columns), 2)
+        self.assertEqual(len(hd_df.columns), 3)
 
     def test_load_data(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         hd: HistoricalData = HistoricalData()
-        hd.load_data(test_dir)
-        self.assertEqual(len(hd.data.columns), 200)
+        hd.load_eod_dir(test_dir)
+        self.assertEqual(len(hd.data.columns), 300)
         self.assertIn("AWU_high", hd.data.columns)
         self.assertIn("AWU_low", hd.data.columns)
         self.assertIn("ZZQB_high", hd.data.columns)
@@ -35,7 +35,7 @@ class SignalCalculatorTest(unittest.TestCase):
     def test_calculate_signals(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         hd: HistoricalData = HistoricalData()
-        hd.load_data(test_dir)
+        hd.load_eod_dir(test_dir)
         signal_calc = SignalCalculator()
         signal_df = signal_calc.calculate_signals(hd)
         # Check that there is 1 column for each stock
@@ -54,7 +54,7 @@ class SignalCalculatorTest(unittest.TestCase):
     def test_calculate_aroon(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         hd: HistoricalData = HistoricalData()
-        hd.load_data(test_dir)
+        hd.load_eod_dir(test_dir)
         signal_calc = SignalCalculator()
         signal = signal_calc._calculate_aroon("AWU", hd.data)
 
@@ -68,7 +68,7 @@ class TradingSimulatorTest(unittest.TestCase):
     def setUp(self) -> None:
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         self.hd: HistoricalData = HistoricalData()
-        self.hd.load_data(test_dir)
+        self.hd.load_eod_dir(test_dir)
         self.signal_calc = SignalCalculator()
         self.signal_df = self.signal_calc.calculate_signals(self.hd)
 
