@@ -12,7 +12,7 @@ class HistoricalData():
     def __init__(self, data_dir: Path = None):
         self.data = None
 
-    def _read_csv(self, file_path: Path) -> pd.DataFrame:
+    def _read_eod_dir_csv(self, file_path: Path) -> pd.DataFrame:
         df = pd.read_csv(file_path, usecols=["date","high", "low", "close"], index_col="date")
         df = df.rename(
             columns={
@@ -23,11 +23,25 @@ class HistoricalData():
         )
         return df
 
-    def load_data(self, data_dir: Path) -> None:
+    def load_eod_dir(self, data_dir: Path) -> None:
         self.data: pd.DataFrame = pd.concat(
-                [self._read_csv(f) for f in data_dir.iterdir() if f.suffix == ".csv"],
+                [self._read_eod_dir_csv(f) for f in data_dir.iterdir() if f.suffix == ".csv"],
                 axis = 1
             )
+        self.data.index = pd.to_datetime(self.data.index)
+
+    def load_prices_csv(self, csv_path: Path) -> None:
+        self.data: pd.DataFrame = pd.read_csv(
+            csv_path,
+            parse_dates=True
+        )
+        self.data = self.data.loc[:,["date", "ticker", "high", "low", "close_split_adjusted"]].rename(
+            columns = {"close_split_adjusted": "close"}
+        )
+        self.data = self.data.pivot_table(index=["date"], columns="ticker", values=["high", "low", "close"])
+        self.data = self.data.sort_index(axis=1, level=1)
+        self.data.columns = [f'{y}_{x}' for x, y in self.data.columns]
+        self.data = self.data.fillna(method='ffill')
 
 
 class SignalCalculator():
@@ -36,7 +50,7 @@ class SignalCalculator():
         self.signals = signals
         self.signal_functions = {
             "aroon": {"fn": self._calculate_aroon}
-        }
+        } ## TODO: implement customizable signals function dict capable of accepting multiple signals functions
 
     def _calculate_aroon(self, stock: str, df: pd.DataFrame) -> pd.Series:
         aroon_oscillator: List = aroon_python_deque(df[f"{stock}_high"].tolist(), df[f"{stock}_low"].tolist())
@@ -196,7 +210,7 @@ if __name__ == "__main__":
 
     # Load eod CSV files into custom HistoricalData class
     hd: HistoricalData = HistoricalData()
-    hd.load_data(eod_data_dir)
+    hd.load_eod_dir(eod_data_dir)
 
     # Calculate signals based upon Aroon Oscillator
     signal_calc: SignalCalculator = SignalCalculator()
