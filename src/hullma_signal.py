@@ -45,8 +45,6 @@ Standardization ideas (also signal line ideas)
 if __name__ == '__main__':
 
     df = load_eod('AWU')
-    t = hma_MACD(df.close, 16, 81)
-    print(t)
     # print(df.iloc[:40])
     # plt.grid(True, alpha = 0.3)
     # plt.plot(df.iloc[-252:]['close'], label='close')
