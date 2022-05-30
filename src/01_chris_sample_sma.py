@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from typing import List
+from IPython import embed as ipython_embed
 
 @time_this
 def pure_python_sma(close: List[float], m: int=10) -> List[float]:
@@ -12,6 +13,8 @@ def pure_python_sma(close: List[float], m: int=10) -> List[float]:
 	"""
 	assert m >= 1, 'Window must be positive.'
 	result = [None] * (m-1)
+
+	ipython_embed()
 
 	accum = sum(close[:m])
 	result.append(accum / m)
@@ -70,27 +73,27 @@ if __name__ == '__main__':
 	# plt.show()
 
 	# result = get_the_cumsum(df.close)
-	result = pure_python_sma(df.close.tolist())
-	result = pandas_sma(df.close)
-	result = pandas_sma_v2(df.close)
-	result = numpy_sma(df.close.values)
+	# result = pure_python_sma(df.close.tolist())
+	# result = pandas_sma(df.close)
+	# result = pandas_sma_v2(df.close)
+	# result = numpy_sma(df.close.values)
 
-	# Positive test case
-	input_data = [1,2,3,4,5,6,7,8,9,10]
-	trust_case_data = [None, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5]
+	# # Positive test case
+	# input_data = [1,2,3,4,5,6,7,8,9,10]
+	# trust_case_data = [None, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5]
 
-	test_case = pure_python_sma(input_data, m=2)
-	truth_case = trust_case_data
-	assert test_case == truth_case, 'Test failed.'
+	# test_case = pure_python_sma(input_data, m=2)
+	# truth_case = trust_case_data
+	# assert test_case == truth_case, 'Test failed.'
 
-	test_case = pandas_sma(pd.Series(input_data), m=2)
-	truth_case = pd.Series(trust_case_data)
-	assert test_case == truth_case, 'Test failed.'	
+	# test_case = pandas_sma(pd.Series(input_data), m=2)
+	# truth_case = pd.Series(trust_case_data)
+	# assert test_case == truth_case, 'Test failed.'	
 
-	# Negative test case
-	try:
-		pure_python_sma([1,2,3,4,5,6,7,8,9,10], m=-3)
-	except AssertionError as e:
-		assert e.args[0] == 'Window must be positive.', 'Uncaught error.'
+	# # Negative test case
+	# try:
+	# 	pure_python_sma([1,2,3,4,5,6,7,8,9,10], m=-3)
+	# except AssertionError as e:
+	# 	assert e.args[0] == 'Window must be positive.', 'Uncaught error.'
 
 

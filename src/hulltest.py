@@ -1,5 +1,3 @@
-from re import X
-from signal import signal
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -10,6 +8,7 @@ import os
 import glob
 from hullma import numpy_matrix_hma
 from hullma_signal import hma_trend_signal
+from datetime import datetime 
 
 def hma_trend_signal(series: pd.Series, m: int=16) -> pd.Series:
     hull_ma = pd.Series(numpy_matrix_hma(series.values, m))
@@ -27,7 +26,10 @@ Dollars = NewType('Dollars', float)
 DATE_FORMAT_STR = '%a %b %d, %Y'
 def _pdate(date: pd.Timestamp):
     """Pretty-print a datetime with just the date"""
-    return date.strftime(DATE_FORMAT_STR)
+    if date is None:
+        pass
+    else:
+        return date.strftime(DATE_FORMAT_STR)
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.dirname(MODULE_DIR)
@@ -167,7 +169,7 @@ class Position(object):
 
         _entry_value = round(self.entry_value, 2)
         _exit_value = round(self.exit_value, 2)
-
+        
         _return = round(100 * self.percent_return, 1)
         _diff = round(self.change_in_value, 2)
 
@@ -637,24 +639,30 @@ if __name__ == '__main__':
     df = load_eod(symbol)
     shares_to_buy = 50
     df['signal'] = hma_trend_signal(df.close, 16)
-    print(df)
+    df = df.iloc[20:]
+    print(df.iloc[:40])
+    # make a function called position object usage(pg59)
+    stocks_im_holding = {}
     for i, row in enumerate(df.itertuples()):
         date = row.Index
         price = row.close
         s = row.signal
-        stocks_im_holding = []
+        # stocks_im_holding = []
 
         if s == 1:
             pos = Position(symbol, date, price, shares_to_buy)
-            stocks_im_holding.append(pos)
+            stocks_im_holding[symbol] = pos
+            # stocks_im_holding.append(pos)
         if not stocks_im_holding:
             pass
         else:
             if s == 0:
+                pos = stocks_im_holding[symbol]
                 pos.record_price_update(date, price)
             elif s == -1:
+                pos = stocks_im_holding[symbol]
                 pos.exit(date, price)
-
-    pos.print_position_summary()
+                pos.print_position_summary()
+    
 
     

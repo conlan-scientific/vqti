@@ -7,6 +7,7 @@ from pypm import metrics, signals, data_io
 from pypm.portfolio import PortfolioHistory, Position, Symbol, Dollars
 
 from collections import OrderedDict, defaultdict
+from IPython import embed as ipython_embed
 
 class SimpleSimulator(object):
     """
@@ -147,6 +148,12 @@ class SimpleSimulator(object):
 
         # Create a hierarchical dataframe to loop through
         self._assert_equal_columns(price, signal, preference)
+        assert (signal.iloc[-1] != 1).all(), (
+            'Last day of trading cannot contain any entries. \n'
+            'Consider zeroing out last day of signals. \n'
+            'For example ... signals.iloc[-1] = 0.'
+        )
+
         df = data_io.concatenate_metrics({
             'price': price,
             'signal': signal,
