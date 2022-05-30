@@ -1,5 +1,5 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal
+from hullma_signal import hma_trend_signal, hma_MACD
 from typing import List
 import pandas as pd
 import numpy as np 
@@ -10,8 +10,9 @@ symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 
 # Just run apply using your signal function
-signal = prices.apply(hma_trend_signal, axis=0)
+signal = prices.apply(hma_MACD, axis=0)
 signal.iloc[-1] = 0
+
 
 # import hashlib
 # print(hashlib.md5(signal.to_csv().encode()).hexdigest())

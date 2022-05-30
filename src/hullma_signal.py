@@ -25,6 +25,13 @@ def hma_trend_signal(series: pd.Series, m: int=16) -> pd.Series:
     signal = np.where(trend < trend.shift(1), -1, signal)
     return signal
 
+def hma_MACD(series: pd.Series, m1: int=16, m2: int=81) -> pd.Series:
+    hma1 = pd.Series(numpy_matrix_hma(series.values, m1))
+    hma2 = pd.Series(numpy_matrix_hma(series.values, m2))
+    assert m1 < m2, "m1 must be less than m2"
+    return (hma1 - hma2) / calculate_annualized_volatility(series)
+
+    
 
 """
 Standardization ideas (also signal line ideas)
@@ -38,7 +45,8 @@ Standardization ideas (also signal line ideas)
 if __name__ == '__main__':
 
     df = load_eod('AWU')
-    df['signal'] = hma_trend_signal(df.close, 16)
+    t = hma_MACD(df.close, 16, 81)
+    print(t)
     # print(df.iloc[:40])
     # plt.grid(True, alpha = 0.3)
     # plt.plot(df.iloc[-252:]['close'], label='close')
@@ -87,6 +95,7 @@ if __name__ == '__main__':
     print(signal_df)
     assert prices_df.index.equals(signal_df.index)
     
+    
     max_assets = 5
     dt_index = prices_df.index
     starting_cash = int(100000)
@@ -127,10 +136,10 @@ if __name__ == '__main__':
         
         equity_curve[f'{date}'] = cash + portfolio_value
                 
-    equity_curve_df = pd.Series(equity_curve, name = 'total_equity', dtype = float)
+    equity_curve_df = pd.Series(equity_curve, name = 'total_equity')
     equity_curve_df.index.name = 'Date'
     # Plot the equity curve
-    print(equity_curve_df.head())
+    print(equity_curve_df)
     # plt.plot(equity_curve_df)
     # plt.show()
     # Measure the sharpe ratio
