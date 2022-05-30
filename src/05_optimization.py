@@ -5,10 +5,10 @@ import pandas as pd
 # Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
-preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
+preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
-def run_simulation(bollinger_band_length: int, sigma_factor: int, 
-    strategy_type: str) -> Dict[str, Any]:
+def run_simulation(bollinger_band_length: int, sigma_factor: float, 
+    strategy_type: str, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
     signal = prices.apply(
@@ -34,7 +34,7 @@ def run_simulation(bollinger_band_length: int, sigma_factor: int,
     # Run the simulator
     simulator = simulation.SimpleSimulator(
         initial_cash=10000,
-        max_active_positions=5,
+        max_active_positions=max_active_positions,
         percent_slippage=0.0005,
         trade_fee=1,
     )
@@ -67,73 +67,24 @@ def run_simulation(bollinger_band_length: int, sigma_factor: int,
         'bollinger_band_length': bollinger_band_length,
         'sigma_factor': sigma_factor,
         'strategy_type': strategy_type,
+        'max_active_positions': max_active_positions,
     }
 
 
 rows = list()
 for bollinger_band_length in [5, 10, 20, 40, 80]:
-    for sigma_factor in [1, 1.5, 2, 2.5, 3, 3.5]:
-        for strategy_type in ['momentum', 'reversal']:
-            for ...
-                for ...
-                    for ...
-            print('Simulating', '...', bollinger_band_length, sigma_factor, strategy_type)
-            row = run_simulation(
-                bollinger_band_length,
-                sigma_factor,
-                strategy_type,
-            )
-            rows.append(row)
+    for sigma_factor in [1, 1.5, 2, 2.5]:
+        for strategy_type in ['reversal']:
+            for max_active_positions in [5, 20]:
+                print('Simulating', '...', bollinger_band_length, sigma_factor, strategy_type, max_active_positions)
+                row = run_simulation(
+                    bollinger_band_length,
+                    sigma_factor,
+                    strategy_type,
+                    max_active_positions
+                )
+                rows.append(row)
 df = pd.DataFrame(rows)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-df = Optimizer(
-    bollinger_band_length=[5, 10, 20, 40, 80],
-    sigma_factor=[1, 1.5, 2, 2.5, 3, 3.5],
-    strategy_type=['momentum', 'reversal'],
-    max_assets=[5, 10, 20,],
-    simulator=run_simulation,
-)
 
 
 
