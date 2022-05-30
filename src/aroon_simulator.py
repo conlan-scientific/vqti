@@ -28,6 +28,20 @@ class HistoricalData():
                 [self._read_eod_dir_csv(f) for f in data_dir.iterdir() if f.suffix == ".csv"],
                 axis = 1
             )
+        self.data.index = pd.to_datetime(self.data.index)
+
+    def load_prices_csv(self, csv_path: Path) -> None:
+        self.data: pd.DataFrame = pd.read_csv(
+            csv_path,
+            parse_dates=True
+        )
+        self.data = self.data.loc[:,["date", "ticker", "high", "low", "close_split_adjusted"]].rename(
+            columns = {"close_split_adjusted": "close"}
+        )
+        self.data = self.data.pivot_table(index=["date"], columns="ticker", values=["high", "low", "close"])
+        self.data = self.data.sort_index(axis=1, level=1)
+        self.data.columns = [f'{y}_{x}' for x, y in self.data.columns]
+        self.data = self.data.fillna(method='ffill')
 
 
 class SignalCalculator():
