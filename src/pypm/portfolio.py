@@ -38,7 +38,7 @@ class Position(object):
         assert entry_price > 0, 'Cannot buy asset with zero or negative price.'
         self.entry_price = entry_price
 
-        assert shares > 0, 'Cannot buy zero or negative shares.'
+        #assert shares > 0, 'Cannot buy zero or negative shares.' [5-31-22] Commented out while exploring optimization
         self.shares = shares
 
         self.symbol = symbol

@@ -43,7 +43,7 @@ tab_df = pd.crosstab(index=melt_df['index'], columns=melt_df['columns'])
 
 #%%
 # Method - Function
-def quick_simulator (price_df: pd.DataFrame, signal_df: pd.DataFrame, cash: int = 100_000, num_stocks: int = 20):
+def quick_simulator (price_df: pd.DataFrame, signal_df: pd.DataFrame, cash: int = 100_000, num_partitions: int = 20):
     
     # Double check signal df which is created off price df has the same index as price df 
     assert price_df.index.equals(signal_df.index), "Indices do not equal"
@@ -55,8 +55,8 @@ def quick_simulator (price_df: pd.DataFrame, signal_df: pd.DataFrame, cash: int 
     portfolio_dict: Dict [date, value: int ]= {}
     equity_dict: Dict [date, value: int ]= {}
     
-    # Fixed number of stocks                    
-    cash_to_spend = cash / num_stocks
+    # Split my money into fixed number of partitions                    
+    cash_to_spend = cash / num_partitions
     
     # Start simulator code 
     for date in price_df.index:
@@ -79,6 +79,7 @@ def quick_simulator (price_df: pd.DataFrame, signal_df: pd.DataFrame, cash: int 
             else: 
                 #Do nothing 
                 pass
+       
         # Keep a few records 
         cash_dict [date] = cash
         stocks_dict[date] = list(shares_dict.keys())
@@ -93,6 +94,7 @@ def quick_simulator (price_df: pd.DataFrame, signal_df: pd.DataFrame, cash: int 
 #%%
 cash_dict, portfolio_dict, equity_dict = quick_simulator(price_df = price_df, signal_df = signal_df)
 
+# Visualize performance
 plt.plot(cash_dict.keys(), cash_dict.values())
 plt.title('Cash over Time')
 plt.show()
@@ -103,12 +105,21 @@ plt.plot(equity_dict.keys(), equity_dict.values())
 plt.title('Equity over Time')
 plt.show()        
 
-#%%
+# Report cagr and sharpe - cci + simulator 
 cagr = calculate_cagr(pd.Series(equity_dict))
-print(cagr)
+print('MY annualized returns: {:.2%}'.format(cagr))
 
 sharpe = calculate_sharpe_ratio(pd.Series(equity_dict))
-print(sharpe)
+print('MY sharpe ratio: {:.2f}'.format(sharpe))
+
+# Report cagr and sharpe - spy benchmark 
+spy = pd.read_csv('/Users/ellenyu/vqti/data/SPY.csv', parse_dates = ['date'], index_col ='date') #!!! read_csv has set_index and pd.to_datetime functionality 
+
+cagr = calculate_cagr(spy.close)
+print('SPY annualized returns: {:.2%}'.format(cagr))
+
+sharpe = calculate_sharpe_ratio(spy.close)
+print('SPY sharpe ratio: {:.2f}'.format(sharpe))
 
 #%%     
 # Method - Class 
