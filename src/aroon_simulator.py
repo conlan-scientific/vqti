@@ -46,26 +46,37 @@ class HistoricalData():
 
 class SignalCalculator():
 
-    def __init__(self, signals = {"aroon": {}}):
-        self.signals = signals
+    def __init__(self, signal_params = {}):
+        self.signal_params = {
+            "aroon": {"p": 25, "signal_boundary": 100}
+        }
+        for s in signal_params:
+            for p in signal_params[s]:
+                self.signal_params[s][p] = signal_params[s][p]
         self.signal_functions = {
             "aroon": {"fn": self._calculate_aroon}
         } ## TODO: implement customizable signals function dict capable of accepting multiple signals functions
 
     def _calculate_aroon(self, stock: str, df: pd.DataFrame) -> pd.Series:
-        aroon_oscillator: List = aroon_python_deque(df[f"{stock}_high"].tolist(), df[f"{stock}_low"].tolist())
+        aroon_oscillator: List = aroon_python_deque(
+            df[f"{stock}_high"].tolist(),
+            df[f"{stock}_low"].tolist(),
+            p=self.signal_params["aroon"]["p"])
         aroon_as_series = pd.Series(
             data = aroon_oscillator,
             name = f"{stock}",
             index = df.index
         )
-        aroon_signal = aroon_signal_line(aroon_as_series)
+        aroon_signal = aroon_signal_line(
+            aroon_as_series,
+            signal_boundary=self.signal_params["aroon"]["signal_boundary"]
+        )
         return aroon_signal
 
     def _signalize_stock(self, stock, df):
         return pd.concat(
             [self.signal_functions[signal]["fn"](stock, df)
-             for signal in self.signals.keys()
+             for signal in self.signal_params.keys()
              ],
             axis = 1
         )

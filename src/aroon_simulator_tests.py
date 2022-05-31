@@ -62,6 +62,35 @@ class SignalCalculatorTest(unittest.TestCase):
         self.assertEqual(len(signal), 2516)
         self.assertEqual(signal.name, "AWU")
 
+    def test_default_aroon_lookback_window(self):
+        test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
+        hd: HistoricalData = HistoricalData()
+        hd.load_eod_dir(test_dir)
+        signal_calc = SignalCalculator()
+        signal = signal_calc._calculate_aroon("AWU", hd.data)
+        self.assertEqual(len(signal), 2516)
+        missing = signal.isna()
+        self.assertTrue(missing.iloc[0])
+        self.assertTrue(missing.iloc[24])
+        self.assertFalse(missing.iloc[25])
+        self.assertFalse(missing.iloc[2515])
+
+    def test_small_aroon_lookback_window(self):
+        test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
+        hd: HistoricalData = HistoricalData()
+        hd.load_eod_dir(test_dir)
+        signal_calc = SignalCalculator(
+            signal_params={
+                "aroon": {"p": 5}
+            }
+        )
+        signal = signal_calc._calculate_aroon("AWU", hd.data)
+        self.assertEqual(len(signal), 2516)
+        missing = signal.isna()
+        self.assertTrue(missing.iloc[0])
+        self.assertTrue(missing.iloc[4])
+        self.assertFalse(missing.iloc[5])
+        self.assertFalse(missing.iloc[2515])
 
 class TradingSimulatorTest(unittest.TestCase):
 
