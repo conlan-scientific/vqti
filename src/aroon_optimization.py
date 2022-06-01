@@ -42,9 +42,22 @@ if __name__ == "__main__":
     hd: HistoricalData = HistoricalData()
     hd.load_eod_dir(eod_data_dir)
 
-    lookbacks: List = [5, 10, 15, 25]
-    thresholds: List = [100] #, 75, 50, 25]
-    max_positions: List = [5, 10] #, 20, 50]
+    lookbacks: List = [5, 10, 15, 25, 50, 75, 100, 125, 150, 175, 200]
+    thresholds: List = [60] #, 75, 50, 25]
+    max_positions: List = [10] #, 20, 50]
+
+    lookbacks: List = [5, 10, 15, 25, 50, 75, 100, 125, 150, 175, 200]
+    thresholds: List = [80] #, 75, 50, 25]
+    max_positions: List = [10] #, 20, 50]
+
+    lookbacks: List = [5, 10, 15, 25, 50, 75, 100, 125, 150, 175, 200]
+    thresholds: List = [40] #, 75, 50, 25]
+    max_positions: List = [10] #, 20, 50]
+
+    lookbacks: List = [5, 10, 15, 25, 50, 75, 100, 125, 150, 175, 200]
+    thresholds: List = [60] #, 75, 50, 25]
+    max_positions: List = [20] #, 20, 50]
+
 
     param_combos = list(itertools.product(lookbacks, thresholds, max_positions))
     results = []
