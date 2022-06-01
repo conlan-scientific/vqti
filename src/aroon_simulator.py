@@ -48,7 +48,7 @@ class SignalCalculator():
 
     def __init__(self, signal_params = {}):
         self.signal_params = {
-            "aroon": {"p": 25, "signal_boundary": 100}
+            "aroon": {"p": 25, "signal_threshold": 100}
         }
         for s in signal_params:
             for p in signal_params[s]:
@@ -69,7 +69,7 @@ class SignalCalculator():
         )
         aroon_signal = aroon_signal_line(
             aroon_as_series,
-            signal_boundary=self.signal_params["aroon"]["signal_boundary"]
+            signal_threshold=self.signal_params["aroon"]["signal_threshold"]
         )
         return aroon_signal
 

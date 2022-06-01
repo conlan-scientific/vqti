@@ -230,13 +230,13 @@ def test_python_deque_aroon():
         assert ground_truth_result[i] == test_result[i]
 
 
-def aroon_signal_line(aroon_oscillator: pd.Series, signal_boundary: int=100) -> pd.Series:
+def aroon_signal_line(aroon_oscillator: pd.Series, signal_threshold: int=100) -> pd.Series:
     '''
     :param aroon_oscillator: `pandas` Series representing the Aroon Oscillator fluctuating between 100 and -100
     :return: Returns a `pandas` Series representing buy (1), sell (-1), or do nothing (0).
     '''
-    buy = (aroon_oscillator >= signal_boundary) * 1
-    sell = (aroon_oscillator <= -signal_boundary) * 1
+    buy = (aroon_oscillator >= signal_threshold) * 1
+    sell = (aroon_oscillator <= -signal_threshold) * 1
     sell[aroon_oscillator.isna()] = np.nan
     return buy - sell
 
