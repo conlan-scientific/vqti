@@ -3,13 +3,9 @@
 """
 Created on Tue May 31 08:09:03 2022
 
-To do:
-    1) Do grid search 
-    2) Get a df and start to analyze it 
-    
-    What do I want to test? window, reversal vs. momentum strategy, where to cut off bands 
-    
-    What do I need to do? Build a funtion that takes parameters, feed into it the necessary steps to do simulation, run simulation 
+Optimize using grid search. This runs on 100 ticker dataframe. 
+
+It took 70 minutes to run chris simulator on 512 sets of parameters. 
     
 Encountered: 
     * AssertionError: Cannot buy zero or negative shares. - I think I circumvented this by commenting out the line of code. Return to this. 
@@ -25,7 +21,6 @@ Encountered:
 
 """
 
-
 import pandas as pd
 from load_ellen import * 
 from cci_ellen import * 
@@ -34,18 +29,19 @@ from pypm import metrics, signals, data_io, simulation
 from typing import List, Dict, Any
 from time import perf_counter
 
-# Load in prices_df - 100 tickers
-price_df = load_all_onecolumn()
-#preference = pd.DataFrame(0, index=price_df.index, columns=price_df.columns)
-preference = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
+#%%
+# # Load in prices_df - 100 tickers
+# price_df = load_all_onecolumn()
+# #preference = pd.DataFrame(0, index=price_df.index, columns=price_df.columns)
+# preference = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
 #%%
-# # Load in prices_df - extended tickers
-# price_df = pd.read_csv('/Users/ellenyu/Desktop/UVA MSDS/Capstone/Coding/prices.csv', parse_dates = ['date'], index_col='date')
-# price_df = price_df[['ticker', 'close_split_adjusted']]
-# price_df = price_df.pivot_table(index = 'date', columns='ticker', values='close_split_adjusted')
-# #preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
-# preference = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
+# Load in prices_df - extended tickers
+price_df = pd.read_csv('/Users/ellenyu/Desktop/UVA MSDS/Capstone/Coding/prices.csv', parse_dates = ['date'], index_col='date')
+price_df = price_df[['ticker', 'close_split_adjusted']]
+price_df = price_df.pivot_table(index = 'date', columns='ticker', values='close_split_adjusted')
+#preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
+preference = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
 #%%
 ## Following Chris' model 
