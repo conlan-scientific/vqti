@@ -123,8 +123,11 @@ def aroon_python_deque(high: List[float], low: List[float], p: int=25) -> List[f
             low_deque.pop()
         low_deque.append( (idx, low_val) ) # add this value
         lookback_min_idx: int = low_deque[0][0] # get window minimum's index from front of deque
+        lookback_min: float = low_deque[0][1]
         periods_since_min: int = idx - lookback_min_idx
-        aroon_low: float = 100 * (p - periods_since_min) / p
+        aroon_low: float = None
+        if not np.isnan(lookback_min) and not np.isnan(low_val):
+            aroon_low = 100 * (p - periods_since_min) / p
 
         # calculate Aroon High. Similar procedure as Aroon Low
         high_val: float = high[idx]
@@ -134,10 +137,15 @@ def aroon_python_deque(high: List[float], low: List[float], p: int=25) -> List[f
             high_deque.pop()
         high_deque.append( (idx, high_val) )
         lookback_max_idx: int = high_deque[0][0]
+        lookback_max: float = high_deque[0][1]
         periods_since_max: int = idx - lookback_max_idx
-        aroon_high: float = 100 * (p - periods_since_max) / p
+        aroon_high: float = None
+        if not np.isnan(lookback_max) and not np.isnan(high_val):
+            aroon_high = 100 * (p - periods_since_max) / p
 
-        aroon_diff: float = aroon_high - aroon_low
+        aroon_diff: float = None
+        if aroon_low != None and aroon_high != None:
+            aroon_diff = aroon_high - aroon_low
         aroon_oscillator.append(aroon_diff) if idx >= p else aroon_oscillator.append(None)
 
     return aroon_oscillator
@@ -210,6 +218,17 @@ def test_python_deque_aroon():
     for i in range(len(ground_truth_result)):
         assert ground_truth_result[i] == test_result[i]
 
+    # Test case 7
+    print("Test Case 7")
+    ground_truth_result = [None, None, -100.0, -100.0, -100.0, -100.0, -100.0, -100.0, -100.0, None]
+    test_result = aroon_python_deque(
+        [np.nan, 9, 8, 7, 6, 5, 4, 3, 2, np.nan],
+        [np.nan, 9, 8, 7, 6, 5, 4, 3, 2, np.nan],
+        p=1)
+    assert len(ground_truth_result) == len(test_result)
+    for i in range(len(ground_truth_result)):
+        assert ground_truth_result[i] == test_result[i]
+
 
 def aroon_signal_line(aroon_oscillator: pd.Series, signal_boundary: int=100) -> pd.Series:
     '''
@@ -256,7 +275,6 @@ if __name__ == '__main__':
     # Signal Line strategy:
     # Buy when Aroon == 100 (indicates a sustained upward trend)
     # Sell when Aroon == -100 (indicates a sustained downwards trend)
-    # TODO: Parameterize
     # 1st order calculation expressed in time units
     result_df['signal_line'] = result_df['aroon'] // 100 # Shortest homework solution award
 
