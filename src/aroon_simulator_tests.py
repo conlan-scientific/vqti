@@ -30,7 +30,7 @@ class SignalCalculatorTest(unittest.TestCase):
     def test_constructor(self):
         sd = SignalCalculator()
         self.assertIsInstance(sd, SignalCalculator)
-        self.assertListEqual(list(sd.signals.keys()), ["aroon"])
+        self.assertListEqual(list(sd.signal_params.keys()), ["aroon"])
 
     def test_calculate_signals(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
@@ -92,7 +92,7 @@ class SignalCalculatorTest(unittest.TestCase):
         self.assertFalse(missing.iloc[5])
         self.assertFalse(missing.iloc[2515])
 
-class TradingSimulatorTest(unittest.TestCase):
+class FullTradingSimulatorTest(unittest.TestCase):
 
     def setUp(self) -> None:
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
@@ -152,3 +152,7 @@ class TradingSimulatorTest(unittest.TestCase):
         }
         portfolio_value = sim._portfolio_value()
         self.assertEqual(188.17 + 2 * 42.95, portfolio_value)
+
+
+if __name__ == "__main__":
+    unittest.main()

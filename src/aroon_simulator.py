@@ -188,7 +188,10 @@ class TradingSimulator():
 
             # If stock is in portfolio: sell if signal is -1, or list to buy if signal is 1
             signals = signals_df.loc[dt]
-            stocks_to_sell: List[str] = [s for s in signals[signals == -1].index.tolist() if s in self.portfolio]
+            # Sell if sell signal (-1) or if stock has disappeared from exchange (nan)
+            stocks_to_sell: List[str] = [s for s in signals[signals == -1].index.tolist() if s in self.portfolio] + \
+                                        [s for s in signals[signals.isna()].index.tolist() if s in self.portfolio]
+            # Buy if buy signal (1)
             stocks_to_buy: List[str] = [s for s in signals[signals == 1].index.tolist() if s not in self.portfolio]
 
             # Sell all held stocks marked for sale
