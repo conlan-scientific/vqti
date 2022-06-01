@@ -25,13 +25,57 @@ def hma_trend_signal(series: pd.Series, m: int=16) -> pd.Series:
     signal = np.where(trend < trend.shift(1), -1, signal)
     return signal
 
-def hma_MACD(series: pd.Series, m1: int=16, m2: int=81) -> pd.Series:
-    hma1 = pd.Series(numpy_matrix_hma(series.values, m1))
-    hma2 = pd.Series(numpy_matrix_hma(series.values, m2))
-    assert m1 < m2, "m1 must be less than m2"
-    return (hma1 - hma2) / calculate_annualized_volatility(series)
+def wma_trend_signal(series: pd.Series, m: int=16) -> pd.Series:
+    wma = pd.Series(numpy_matrix_wma(series.values, m))
+    trend = np.sign(wma - wma.shift(1))
+    signal = np.where(trend > trend.shift(1), 1, 0)
+    signal = np.where(trend < trend.shift(1), -1, signal)
+    return signal
 
-    
+def hma_MACD(series: pd.Series, m1: int=16, m2: int=81) -> pd.Series:
+    assert m1 < m2, "m1 must be less than m2"
+    hma1 = pd.Series(numpy_matrix_hma(series.values, m1)) # / series.rolling(m1).std())
+    hma2 = pd.Series(numpy_matrix_hma(series.values, m2)) # / series.rolling(m2).std())
+    return (hma1 - hma2)  #volatility should be on the same length as the indicator
+
+def hma_macd_signal(series: pd.Series, m1: int=16, m2: int=81):
+    macd = hma_MACD(series, m1, m2)
+    macd_sign = np.sign(macd)
+    macd_signal = np.where(macd_sign > macd_sign.shift(1), 1, 0)
+    macd_signal = np.where(macd_sign < macd_sign.shift(1), -1, macd_signal)
+    return macd_signal
+
+def hma_price_crossover(series: pd.Series, m: int=16):
+    series = np.array(series)
+    hull_ma = pd.Series(numpy_matrix_hma(series, m))
+    sign = np.where(hull_ma > series, 1, 0)
+    sign = pd.Series(np.where(hull_ma < series, -1, sign))
+    price_crossover = np.where(sign > sign.shift(1), 1, 0)
+    price_crossover = np.where(sign < sign.shift(1), -1, price_crossover)
+    return price_crossover 
+
+def hma_crossover(series: pd.Series, m1: int=16, m2: int=81)-> pd.Series:
+    fast_hma = pd.Series(numpy_matrix_hma(series, m1))
+    slow_hma = pd.Series(numpy_matrix_hma(series, m2))
+    sign = np.sign(fast_hma - slow_hma)
+    crossover = np.where(sign > sign.shift(1), 1, 0)
+    crossover = np.where(sign < sign.shift(1), -1, crossover)
+    return crossover
+
+def atr(dataframe: pd.DataFrame, n: int=14,):
+    high_low = dataframe['high'] - dataframe['low']
+    high_close = np.abs(dataframe['high'] - dataframe['close'].shift())
+    low_close = np.abs(dataframe['low'] - dataframe['close'].shift())
+    ranges = pd.concat([high_low, high_close, low_close], axis=1)
+    true_range = np.max(ranges, axis=1)
+    atr = true_range.rolling(n).sum()/n
+    return atr
+
+def volatility(series: pd.Series, n: int=14):
+    log_returns = pd.Series(np.log(series / series.shift(-1)))
+    vol = log_returns.rolling(window=n).std()*np.sqrt(n)
+    return vol
+
 
 """
 Standardization ideas (also signal line ideas)
@@ -45,7 +89,13 @@ Standardization ideas (also signal line ideas)
 if __name__ == '__main__':
 
     df = load_eod('AWU')
-    # print(df.iloc[:40])
+    df['pricecross'] = (hma_price_crossover(df.close, 4))
+    df['vol'] = volatility(df.close, 14)
+    df['fast'] = numpy_matrix_hma(df.close, 4)
+    df['slow'] = numpy_matrix_hma(df.close, 16)
+    df['crossover'] = hma_crossover(df.close,4,16)
+    df['atr']= atr(df,14)
+    print(df.iloc[:40])
     # plt.grid(True, alpha = 0.3)
     # plt.plot(df.iloc[-252:]['close'], label='close')
     # plt.plot(df.iloc[-252:]['hull_ma'], label='hma')
@@ -53,7 +103,6 @@ if __name__ == '__main__':
     # plt.plot(df.iloc[-252:]['signal'] * 100, label='signal')
     # plt.legend(loc=2)
     # plt.show()
-    
 
     os.chdir('data\eod')
     extension = 'csv'
