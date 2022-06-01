@@ -427,7 +427,7 @@ class SimpleSimulator(object):
 
         ### Set simulation parameters
 
-        # Initial cash in portfolio
+        # Initial cash in porfolio
         # self.cash will fluctuate
         self.initial_cash = self.cash = initial_cash
 
@@ -469,6 +469,7 @@ class SimpleSimulator(object):
     def make_tuple_lookup(columns) -> Callable[[str, str], int]:
         """
         Map a multi-index dataframe to an itertuples-like object.
+
         The index of the dateframe is always the zero-th element.
         """
 
@@ -497,9 +498,9 @@ class SimpleSimulator(object):
         """
 
         # Figure out how much we are willing to spend
-        cash_to_spend = self.cash / self.free_position_slots
-        cash_to_spend -= self.trade_fee
-
+        cash_available = self.cash - self.trade_fee
+        cash_to_spend = cash_available / self.free_position_slots
+        
         # Calculate buy_price and number of shares. Fractional shares allowed.
         purchase_price = (1 + self.percent_slippage) * price
         shares = cash_to_spend / purchase_price
@@ -519,6 +520,7 @@ class SimpleSimulator(object):
         """
         Keep track of exit price, recover cash, close position, and record it in
         portfolio history.
+
         Will raise a KeyError if symbol isn't an active position
         """
 
@@ -541,18 +543,25 @@ class SimpleSimulator(object):
         column_names = set(args[0].columns.values)
         for arg in args[1:]:
             assert set(arg.columns.values) == column_names, \
-                'Found unequal column names in input data frames.'
+                'Found unequal column names in input dataframes.'
 
     def simulate(self, price: pd.DataFrame, signal: pd.DataFrame, 
         preference: pd.DataFrame):
         """
         Runs the simulation.
-        price, signal, and preference are data frames with the column names 
+
+        price, signal, and preference are dataframes with the column names 
         represented by the same set of stock symbols.
         """
 
-        # Create a hierarchical data frame to loop through
+        # Create a hierarchical dataframe to loop through
         self._assert_equal_columns(price, signal, preference)
+        assert (signal.iloc[-1] != 1).all(), (
+            'Last day of trading cannot contain any entries. \n'
+            'Consider zeroing out last day of signals. \n'
+            'For example ... signals.iloc[-1] = 0.'
+        )
+
         df = data_io.concatenate_metrics({
             'price': price,
             'signal': signal,
@@ -572,7 +581,7 @@ class SimpleSimulator(object):
 
         # Iterating over all dates.
         # itertuples() is significantly faster than iterrows(), it however comes
-        # at the cost of being able index easily. In order to get around this
+        # at the cost of not being able index easily. In order to get around this
         # we use an tuple lookup function: "_idx"
         for row in df.itertuples():
 
@@ -628,11 +637,12 @@ class SimpleSimulator(object):
                 position = active_positions_by_symbol[s]
                 position.record_price_update(date, price)
 
+            self.portfolio_history.record_cash(date, self.cash)
+
         # Sell all positions and mark simulation as complete
         for s in self.active_symbols:
             self.sell_to_close(s, date, row[_idx(s, 'price')])
         self.portfolio_history.finish()
-    
 if __name__ == '__main__':
 
     symbol = 'AWU'
@@ -664,5 +674,79 @@ if __name__ == '__main__':
                 pos.exit(date, price)
                 pos.print_position_summary()
     
+    #portfolio history object usage (pg 64)
+    
+    portfolio_history = PortfolioHistory()
+    initial_cash = cash = 10000
+    stocks_im_holding = {}
+    for i, row in enumerate(df.itertuples()):
+        date = row.Index
+        price = row.close
+        s = row.signal
+        
+        if s == 1:
+            # Figure out how many shares to buy
+            shares_to_buy = initial_cash / price 
 
+            # Record the position
+            position = Position(symbol, date, price, shares_to_buy)
+
+            # Spend all of your cash
+            cash -= initial_cash
+            
+            stocks_im_holding[symbol] = position
+        if not stocks_im_holding:
+            pass
+        else:
+            if s == 0:
+                position.record_price_update(date, price)
+
+            elif s == -1:
+                # Sell the asset
+                position.exit(date, price)
+
+                # Get your cash back
+                cash += price * shares_to_buy
+
+                # Record the position
+                portfolio_history.add_to_history(position)
+
+            # Record cash at every step
+            portfolio_history.record_cash(date, cash)
+
+    portfolio_history.finish()
+    portfolio_history.print_position_summaries()
+    portfolio_history.print_summary()
+    portfolio_history.plot()
+    
+ 
+    # Load in data
+    symbols: List[str] = data_io.get_all_symbols()
+    prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
+    signal = prices.apply(hma_trend_signal, axis=0)
+    signal.iloc[-1] = 0
+
+    # Use a rolling sharpe ratio approximation as a preference matrix
+    preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
+    assert signal.index.equals(preference.index)
+    assert prices.index.equals(preference.index)
+    assert prices.columns.equals(signal.columns)
+    assert signal.columns.equals(preference.columns)
+    # Run the simulator
+    simulator = SimpleSimulator(
+        initial_cash=10000,
+        max_active_positions=20,
+        percent_slippage=0.0005,
+        trade_fee=1,
+    )
+    simulator.simulate(prices, signal, preference)
+
+    # Print results
+    simulator.portfolio_history.print_position_summaries()
+    simulator.print_initial_parameters()
+    simulator.portfolio_history.print_summary()
+    simulator.portfolio_history.plot()
+
+
+    
     

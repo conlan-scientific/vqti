@@ -65,6 +65,9 @@ def load_all(from_directory: str = EOD_DIR, extension: str = 'csv', to_directory
     # os.chdir(to_directory)
     # all_df.to_csv( "all_df.csv", index=False, encoding='utf-8-sig')
     
+    # Change directory back to module directory [5-31-22]
+    os.chdir(MODULE_DIR)
+    
     return all_df 
 
 # ??? How to run technical indicator by ticker on the ticker escapes me atm so, this is a temporary work around 
@@ -97,6 +100,9 @@ def load_all_with_cci(from_directory: str = EOD_DIR, extension: str = 'csv', to_
     # os.chdir(to_directory)
     # all_df.to_csv( "all_df.csv", index=False, encoding='utf-8-sig')
     
+    # Change directory back to module directory [5-31-22]
+    os.chdir(MODULE_DIR)
+    
     return all_df 
 
 # ??? Say I want to exchange python_cci_loop with python_ccimodified_loop, how do I do that? The following is a temporary work around 
@@ -127,6 +133,9 @@ def load_all_with_ccimodified(from_directory: str = EOD_DIR, extension: str = 'c
     # # If I want to export combined dataframe into csv
     # os.chdir(to_directory)
     # all_df.to_csv( "all_df.csv", index=False, encoding='utf-8-sig')
+    
+    # Change directory back to module directory [5-31-22]
+    os.chdir(MODULE_DIR)
     
     return all_df 
 
@@ -161,6 +170,9 @@ def load_all_onecolumn (from_directory: str = EOD_DIR, extension: str = 'csv', t
     # os.chdir(to_directory)
     # all_df.to_csv( "all_df.csv", index=False, encoding='utf-8-sig')
     
+    # Change directory back to module directory [5-31-22]
+    os.chdir(MODULE_DIR)
+    
     return all_df
 
 @time_this
@@ -192,6 +204,9 @@ def load_all_onecolumn_with_cci (from_directory: str = EOD_DIR, extension: str =
     # os.chdir(to_directory)
     # all_df.to_csv( "all_df.csv", index=False, encoding='utf-8-sig')
     
+    # Change directory back to module directory [5-31-22]
+    os.chdir(MODULE_DIR)
+    
     return all_df
 
 @time_this
@@ -222,6 +237,9 @@ def load_all_onecolumn_with_ccimodified (from_directory: str = EOD_DIR, extensio
     # # If I want to export combined dataframe into csv
     # os.chdir(to_directory)
     # all_df.to_csv( "all_df.csv", index=False, encoding='utf-8-sig')
+    
+    # Change directory back to module directory [5-31-22]
+    os.chdir(MODULE_DIR)
     
     return all_df
 
