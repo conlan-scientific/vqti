@@ -63,6 +63,7 @@ rows = list()
 for periods in [5, 10, 14, 20, 40, 80, 100]:
             for max_active_positions in [5, 20]:
                 #print('Simulating', hma_length, max_active_positions)
+                print('Simulating', '...', periods, max_active_positions)
                 row = run_simulation(
                     periods,
                     max_active_positions

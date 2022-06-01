@@ -10,7 +10,6 @@ from typing import List
 
 
 # TODO: The return value of this function should be List[float]
-@time_this
 def pure_python_relative_strength_index(close: List[float], n: int = 10) -> List[float]:
     upList = close.clip(lower = 0)
     downList = -1 * close.clip(upper = 0)
@@ -45,17 +44,11 @@ def pure_python_relative_strength_index(close: List[float], n: int = 10) -> List
 #     relative_strength_factor = up_series_ema.div(down_series_ema)
 #     return relative_strength_factor.rolling(window = n).apply(lambda x: relative_strength_index_calculation(x))
 
-# def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
-#     calculation_list = pure_python_relative_strength_index(close, n)
-#     result = []
-#     for x in calculation_list:
-#         if (x < 30):
-#             result.append(1)
-#         if (x > 70):
-#             result.append(-1)
-#         else:
-#             result.append(0)
-#     return result
+def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
+    calculation_list = pure_python_relative_strength_index(close, n)
+    signal = np.where(calculation_list > 70, 1, 0)
+    signal = np.where(calculation_list < 30, -1, signal)
+    return signal
 
 if __name__ == '__main__':
 
