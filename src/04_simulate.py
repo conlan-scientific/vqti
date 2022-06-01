@@ -7,10 +7,11 @@ symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 
 # Just run apply using your signal function
-signal = prices.apply(signals.create_bollinger_band_signal, axis=0)
+signal = prices.apply(signals.create_bollinger_band_signal, args=(40, 1.0), axis=0)
 # signal *= -1
 
-preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
+signal.iloc[-1] = 0
+preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
 
 assert signal.index.equals(preference.index)

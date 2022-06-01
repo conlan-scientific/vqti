@@ -194,8 +194,8 @@ def python_ccimodified_loop(input_list: List[float], window: int=20) -> List[flo
         window_abs_deviation = [abs(x) for x in window_deviation]
         assert window == len(window_abs_deviation), "Lengths do not equal" # Double check window = len(input_list[i-window:i]) 
         window_mad = sum(window_abs_deviation)/ window
-        if window_mad == 0:
-            print('i:', i, ',', 'window_mad:', window_mad, '\n')
+        # if window_mad == 0:
+        #     print('i:', i, ',', 'window_mad:', window_mad, '\n')
     
         # Put it all together using formula for cci
         ## implement try except block to handle when window mad = 0 [5-20-22]
