@@ -3,23 +3,30 @@
 """
 Created on Thu May 26 12:49:30 2022
 
-First and foremost, simulate on more tickers.
+1) Simulate on more tickers
 
 Pending: 
-    * trouble shoot nans in annualized returns and sharpe ratio
-    * trouble shoot ValueError: Found array with 0 sample(s) (shape=(0, 1)) while a minimum of 1 is required.
+    * trouble shoot nans in cagr and sharpe ratio for quick simulator 
+    * trouble shoot ValueError: Found array with 0 sample(s) (shape=(0, 1)) while a minimum of 1 is required
+    for chris simulator 
 
-What are ways to improve the current trading strategy? 
+2) Parallelize computation 
+    
+It takes ~14 minutes to run quick simulator and ~3 minutes to run chris simulator. 
+
+3) Improve on trading strategy     
+    
+The current performance based off cci is terrible so, improve performance by:
     * overlay macroeconomic metrics 
     * build better cash management strategy into simulator
-    * better indicators - Note, chris argues there's no significant difference 
+    * use better indicators - Note, chris argues there's no significant difference 
     between technical indicators 
-    * more indicators and do some kind of voting method e.g. 
+    * use more indicators and do some kind of voting method e.g. 
     ensemble methods, bayesian model averaging, or uniform weights 
-    * learning algorithm 
+    * implement learning algorithm 
     * ultimately, improve my simulator by 1) inputing better cash 
     management strategy, 2) getting a feel for what's importance to track 
-    e.g. do we care about the number of bad trades (i.e. resulting in losses) 
+    e.g. maybe we care about the number of bad trades (i.e. resulting in losses) 
     versus good trades, 3) building a simulator object and write tests
 
 @author: ellenyu
@@ -68,7 +75,7 @@ print(tab_df, '\n')
 
 #%%
 # Run my simualator 
-cash_dict, portfolio_dict, equity_dict = quick_simulator(price_df = price_df, signal_df = signal_df)
+cash_dict, portfolio_dict, equity_dict = quick_simulator(price_df = price_df, signal_df = signal_df) # completed in 838390.865 milliseconds = ~14 minutes
 
 # Visualize performance
 plt.plot(cash_dict.keys(), cash_dict.values())
@@ -99,15 +106,16 @@ print('SPY sharpe ratio: {:.2f}'.format(sharpe))
 
 #%%
 # Run chris's simulator
-signal = signal_df
-prices = price_df
 
-preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
+preference_df = pd.DataFrame(0, index=price_df.index, columns=price_df.columns)
+#print(preference_df)
 
+# Do nothing on the last day
+signal_df.iloc[-1] = 0
 
-assert signal.index.equals(preference.index)
-assert prices.columns.equals(signal.columns)
-assert signal.columns.equals(preference.columns)
+assert signal_df.index.equals(preference_df.index)
+assert price_df.columns.equals(signal_df.columns)
+assert signal_df.columns.equals(preference_df.columns)
 
 # Run the simulator
 simulator = simulation.SimpleSimulator(
@@ -116,12 +124,11 @@ simulator = simulation.SimpleSimulator(
     percent_slippage=0.0005,
     trade_fee=1,
 )
-simulator.simulate(prices, signal, preference)
-
+simulator.simulate(price = price_df, signal = signal_df, preference = preference_df)
 
 # Print results
-simulator.portfolio_history.print_position_summaries()
+# simulator.portfolio_history.print_position_summaries()
 simulator.print_initial_parameters()
-simulator.portfolio_history.print_summary()
+#simulator.portfolio_history.print_summary()
 simulator.portfolio_history.plot()
 simulator.portfolio_history.plot_benchmark_comparison()

@@ -30,7 +30,7 @@ class SignalCalculatorTest(unittest.TestCase):
     def test_constructor(self):
         sd = SignalCalculator()
         self.assertIsInstance(sd, SignalCalculator)
-        self.assertListEqual(list(sd.signals.keys()), ["aroon"])
+        self.assertListEqual(list(sd.signal_params.keys()), ["aroon"])
 
     def test_calculate_signals(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
@@ -62,8 +62,37 @@ class SignalCalculatorTest(unittest.TestCase):
         self.assertEqual(len(signal), 2516)
         self.assertEqual(signal.name, "AWU")
 
+    def test_default_aroon_lookback_window(self):
+        test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
+        hd: HistoricalData = HistoricalData()
+        hd.load_eod_dir(test_dir)
+        signal_calc = SignalCalculator()
+        signal = signal_calc._calculate_aroon("AWU", hd.data)
+        self.assertEqual(len(signal), 2516)
+        missing = signal.isna()
+        self.assertTrue(missing.iloc[0])
+        self.assertTrue(missing.iloc[24])
+        self.assertFalse(missing.iloc[25])
+        self.assertFalse(missing.iloc[2515])
 
-class TradingSimulatorTest(unittest.TestCase):
+    def test_small_aroon_lookback_window(self):
+        test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
+        hd: HistoricalData = HistoricalData()
+        hd.load_eod_dir(test_dir)
+        signal_calc = SignalCalculator(
+            signal_params={
+                "aroon": {"p": 5}
+            }
+        )
+        signal = signal_calc._calculate_aroon("AWU", hd.data)
+        self.assertEqual(len(signal), 2516)
+        missing = signal.isna()
+        self.assertTrue(missing.iloc[0])
+        self.assertTrue(missing.iloc[4])
+        self.assertFalse(missing.iloc[5])
+        self.assertFalse(missing.iloc[2515])
+
+class FullTradingSimulatorTest(unittest.TestCase):
 
     def setUp(self) -> None:
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
@@ -123,3 +152,7 @@ class TradingSimulatorTest(unittest.TestCase):
         }
         portfolio_value = sim._portfolio_value()
         self.assertEqual(188.17 + 2 * 42.95, portfolio_value)
+
+
+if __name__ == "__main__":
+    unittest.main()

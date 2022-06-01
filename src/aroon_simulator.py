@@ -46,26 +46,37 @@ class HistoricalData():
 
 class SignalCalculator():
 
-    def __init__(self, signals = {"aroon": {}}):
-        self.signals = signals
+    def __init__(self, signal_params = {}):
+        self.signal_params = {
+            "aroon": {"p": 25, "signal_threshold": 100}
+        }
+        for s in signal_params:
+            for p in signal_params[s]:
+                self.signal_params[s][p] = signal_params[s][p]
         self.signal_functions = {
             "aroon": {"fn": self._calculate_aroon}
         } ## TODO: implement customizable signals function dict capable of accepting multiple signals functions
 
     def _calculate_aroon(self, stock: str, df: pd.DataFrame) -> pd.Series:
-        aroon_oscillator: List = aroon_python_deque(df[f"{stock}_high"].tolist(), df[f"{stock}_low"].tolist())
+        aroon_oscillator: List = aroon_python_deque(
+            df[f"{stock}_high"].tolist(),
+            df[f"{stock}_low"].tolist(),
+            p=self.signal_params["aroon"]["p"])
         aroon_as_series = pd.Series(
             data = aroon_oscillator,
             name = f"{stock}",
             index = df.index
         )
-        aroon_signal = aroon_signal_line(aroon_as_series)
+        aroon_signal = aroon_signal_line(
+            aroon_as_series,
+            signal_threshold=self.signal_params["aroon"]["signal_threshold"]
+        )
         return aroon_signal
 
     def _signalize_stock(self, stock, df):
         return pd.concat(
             [self.signal_functions[signal]["fn"](stock, df)
-             for signal in self.signals.keys()
+             for signal in self.signal_params.keys()
              ],
             axis = 1
         )
@@ -177,7 +188,10 @@ class TradingSimulator():
 
             # If stock is in portfolio: sell if signal is -1, or list to buy if signal is 1
             signals = signals_df.loc[dt]
-            stocks_to_sell: List[str] = [s for s in signals[signals == -1].index.tolist() if s in self.portfolio]
+            # Sell if sell signal (-1) or if stock has disappeared from exchange (nan)
+            stocks_to_sell: List[str] = [s for s in signals[signals == -1].index.tolist() if s in self.portfolio] + \
+                                        [s for s in signals[signals.isna()].index.tolist() if s in self.portfolio]
+            # Buy if buy signal (1)
             stocks_to_buy: List[str] = [s for s in signals[signals == 1].index.tolist() if s not in self.portfolio]
 
             # Sell all held stocks marked for sale
