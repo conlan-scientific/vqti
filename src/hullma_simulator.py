@@ -16,6 +16,7 @@ signal.iloc[-1] = 0
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
 # import hashlib
+# this checks to see if the there is any randomness in a function.
 # print(hashlib.md5(signal.to_csv().encode()).hexdigest())
 
 # make consistent preference by making it rolling sharp.

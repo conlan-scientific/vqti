@@ -19,7 +19,7 @@ from hullma import (
     numpy_matrix_wma
 )
 
-def hma_trend_signal(series: pd.Series, m: int=16) -> pd.Series:
+def hma_trend_signal(series: pd.Series, m: int=49) -> pd.Series:
     hull_ma = pd.Series(numpy_matrix_hma(series.values, m))
     trend = np.sign(hull_ma - hull_ma.shift(1))
     signal = np.where(trend > trend.shift(1), 1, 0)
@@ -47,9 +47,6 @@ def hma_zscore_signal(series: pd.Series, m1: int=16, m2: int=81):
     zscore = hma_zscore(series, m1, m2)
     zscore_sign = np.sign(zscore)
     zscore_shifted_sign = zscore_sign.shift(1, axis=0)
-    
-    # macd_signal = np.where(macd_sign > macd_sign.shift(1), 1, 0)
-    # macd_signal = np.where(macd_sign < macd_sign.shift(1), -1, macd_signal)
     return zscore_sign * (zscore_sign != zscore_shifted_sign)
 
 def hma_macd_signal(series: pd.Series, m1: int=16, m2: int=49, sig: int=9) -> pd.Series:
@@ -62,9 +59,6 @@ def hma_macd_signal(series: pd.Series, m1: int=16, m2: int=49, sig: int=9) -> pd
     hist = macd - macd_sig
     hist_sign = np.sign(hist)
     hist_shifted_sign = hist_sign.shift(1, axis=0)
-    # sign = np.sign(macd_sig - macd)
-    # crossover = np.where(sign > sign.shift(1), 1, 0)
-    # crossover = np.where(sign < sign.shift(1), -1, crossover) 
     return hist_sign * (hist_sign != hist_shifted_sign)
 
 def hma_price_crossover(series: pd.Series, m: int=16):

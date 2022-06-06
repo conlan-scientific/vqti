@@ -1,10 +1,14 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal
+from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
 from typing import List, Dict, Any
 import pandas as pd
 import itertools
 import time
 
+# assert pd.Index([close,high]).isin(df.columns)
+# assert columns are floats
+#instead of merge, use concat. Instead of map, use apply(lambda). 
+# assert df.index.is_unique
 # Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
@@ -72,6 +76,7 @@ for hma_length in [4, 9, 16, 25, 49, 81]:
 df = pd.DataFrame(rows)
 print(df)
 '''
+#hma trend signal
 hma_length: List = [4, 9, 16, 25, 49, 81]
 max_active_positions: List = [10, 20, 30, 40, 50]
 parameters = list(itertools.product(hma_length, max_active_positions))
@@ -85,4 +90,3 @@ for i, combo in enumerate(parameters):
         )
 df = pd.DataFrame(results)
 print(df)
-
