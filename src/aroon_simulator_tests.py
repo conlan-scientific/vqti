@@ -10,16 +10,16 @@ class HistoricalDataTestCase(unittest.TestCase):
 
     def test_read_csv(self):
         test_file: Path = Path(__file__).parent.parent / "data" / "eod" / "AWU.csv"
-        hd_df: pd.DataFrame = HistoricalData()._read_csv(test_file)
+        hd_df: pd.DataFrame = HistoricalData()._read_eod_dir_csv(test_file)
         self.assertIn("AWU_high", hd_df.columns)
         self.assertIn("AWU_low", hd_df.columns)
-        self.assertEqual(len(hd_df.columns), 2)
+        self.assertEqual(len(hd_df.columns), 3)
 
     def test_load_data(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         hd: HistoricalData = HistoricalData()
-        hd.load_data(test_dir)
-        self.assertEqual(len(hd.data.columns), 200)
+        hd.load_eod_dir(test_dir)
+        self.assertEqual(len(hd.data.columns), 300)
         self.assertIn("AWU_high", hd.data.columns)
         self.assertIn("AWU_low", hd.data.columns)
         self.assertIn("ZZQB_high", hd.data.columns)
@@ -30,12 +30,12 @@ class SignalCalculatorTest(unittest.TestCase):
     def test_constructor(self):
         sd = SignalCalculator()
         self.assertIsInstance(sd, SignalCalculator)
-        self.assertListEqual(list(sd.signals.keys()), ["aroon"])
+        self.assertListEqual(list(sd.signal_params.keys()), ["aroon"])
 
     def test_calculate_signals(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         hd: HistoricalData = HistoricalData()
-        hd.load_data(test_dir)
+        hd.load_eod_dir(test_dir)
         signal_calc = SignalCalculator()
         signal_df = signal_calc.calculate_signals(hd)
         # Check that there is 1 column for each stock
@@ -54,7 +54,7 @@ class SignalCalculatorTest(unittest.TestCase):
     def test_calculate_aroon(self):
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         hd: HistoricalData = HistoricalData()
-        hd.load_data(test_dir)
+        hd.load_eod_dir(test_dir)
         signal_calc = SignalCalculator()
         signal = signal_calc._calculate_aroon("AWU", hd.data)
 
@@ -62,13 +62,42 @@ class SignalCalculatorTest(unittest.TestCase):
         self.assertEqual(len(signal), 2516)
         self.assertEqual(signal.name, "AWU")
 
+    def test_default_aroon_lookback_window(self):
+        test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
+        hd: HistoricalData = HistoricalData()
+        hd.load_eod_dir(test_dir)
+        signal_calc = SignalCalculator()
+        signal = signal_calc._calculate_aroon("AWU", hd.data)
+        self.assertEqual(len(signal), 2516)
+        missing = signal.isna()
+        self.assertTrue(missing.iloc[0])
+        self.assertTrue(missing.iloc[24])
+        self.assertFalse(missing.iloc[25])
+        self.assertFalse(missing.iloc[2515])
 
-class TradingSimulatorTest(unittest.TestCase):
+    def test_small_aroon_lookback_window(self):
+        test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
+        hd: HistoricalData = HistoricalData()
+        hd.load_eod_dir(test_dir)
+        signal_calc = SignalCalculator(
+            signal_params={
+                "aroon": {"p": 5}
+            }
+        )
+        signal = signal_calc._calculate_aroon("AWU", hd.data)
+        self.assertEqual(len(signal), 2516)
+        missing = signal.isna()
+        self.assertTrue(missing.iloc[0])
+        self.assertTrue(missing.iloc[4])
+        self.assertFalse(missing.iloc[5])
+        self.assertFalse(missing.iloc[2515])
+
+class FullTradingSimulatorTest(unittest.TestCase):
 
     def setUp(self) -> None:
         test_dir: Path = Path(__file__).parent.parent / "data" / "eod"
         self.hd: HistoricalData = HistoricalData()
-        self.hd.load_data(test_dir)
+        self.hd.load_eod_dir(test_dir)
         self.signal_calc = SignalCalculator()
         self.signal_df = self.signal_calc.calculate_signals(self.hd)
 
@@ -123,3 +152,7 @@ class TradingSimulatorTest(unittest.TestCase):
         }
         portfolio_value = sim._portfolio_value()
         self.assertEqual(188.17 + 2 * 42.95, portfolio_value)
+
+
+if __name__ == "__main__":
+    unittest.main()

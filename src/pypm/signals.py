@@ -25,13 +25,13 @@ def create_macd_signal(series: pd.Series, n1: int=5, n2: int=34) -> pd.Series:
     return macd_sign * (macd_sign != macd_shifted_sign)
 
 
-def create_bollinger_band_signal(series: pd.Series, n: int=20) -> pd.Series:
+def create_bollinger_band_signal(series: pd.Series, n: int=20, sigma_factor: int=20) -> pd.Series:
     """
     Create a reversal-based signal based on the upper and lower bands of the 
     Bollinger bands. Generate a buy signal when the price is below the lower 
     band, and a sell signal when the price is above the upper band.
     """
-    bollinger_bands = calculate_bollinger_bands(series, n)
+    bollinger_bands = calculate_bollinger_bands(series, n, sigma_factor)
     sell = series > bollinger_bands['upper']
     buy = series < bollinger_bands['lower']
     return (1*buy - 1*sell)

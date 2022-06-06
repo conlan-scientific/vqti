@@ -38,7 +38,7 @@ class Position(object):
         assert entry_price > 0, 'Cannot buy asset with zero or negative price.'
         self.entry_price = entry_price
 
-        assert shares > 0, 'Cannot buy zero or negative shares.'
+        #assert shares > 0, 'Cannot buy zero or negative shares.' [5-31-22] Commented out while exploring optimization
         self.shares = shares
 
         self.symbol = symbol
@@ -178,7 +178,7 @@ class PortfolioHistory(object):
         self._cash_history: Dict[pd.Timestamp, Dollars] = dict()
         self._simulation_finished = False
         self._spy: pd.DataFrame = pd.DataFrame()
-        self._spy_log_returns: pd.Series = pd.Series()
+        self._spy_log_returns: pd.Series = pd.Series(dtype='float64')
 
     def add_to_history(self, position: Position):
         _log = self._logged_positions
@@ -194,7 +194,7 @@ class PortfolioHistory(object):
 
     @staticmethod
     def _as_oseries(d: Dict[pd.Timestamp, Any]) -> pd.Series:
-        return pd.Series(d).sort_index()
+        return pd.Series(d, d).sort_index()
 
     def _compute_cash_series(self):
         self._cash_series = self._as_oseries(self._cash_history)

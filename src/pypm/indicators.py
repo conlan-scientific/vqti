@@ -23,7 +23,7 @@ def calculate_macd_oscillator(series: pd.Series,
         calculate_simple_moving_average(series, n2)
 
 
-def calculate_bollinger_bands(series: pd.Series, n: int=20) -> pd.DataFrame:
+def calculate_bollinger_bands(series: pd.Series, n: int=20, sigma_factor: int=2) -> pd.DataFrame:
     """
     Calculates the Bollinger Bands and returns them as a dataframe
     """
@@ -33,8 +33,8 @@ def calculate_bollinger_bands(series: pd.Series, n: int=20) -> pd.DataFrame:
 
     return pd.DataFrame({
         'middle': sma,
-        'upper': sma + 2 * stdev,
-        'lower': sma - 2 * stdev
+        'upper': sma + sigma_factor * stdev,
+        'lower': sma - sigma_factor * stdev
     })
 
 

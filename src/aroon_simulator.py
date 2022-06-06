@@ -12,7 +12,7 @@ class HistoricalData():
     def __init__(self, data_dir: Path = None):
         self.data = None
 
-    def _read_csv(self, file_path: Path) -> pd.DataFrame:
+    def _read_eod_dir_csv(self, file_path: Path) -> pd.DataFrame:
         df = pd.read_csv(file_path, usecols=["date","high", "low", "close"], index_col="date")
         df = df.rename(
             columns={
@@ -23,35 +23,60 @@ class HistoricalData():
         )
         return df
 
-    def load_data(self, data_dir: Path) -> None:
+    def load_eod_dir(self, data_dir: Path) -> None:
         self.data: pd.DataFrame = pd.concat(
-                [self._read_csv(f) for f in data_dir.iterdir() if f.suffix == ".csv"],
+                [self._read_eod_dir_csv(f) for f in data_dir.iterdir() if f.suffix == ".csv"],
                 axis = 1
             )
+        self.data.index = pd.to_datetime(self.data.index)
+
+    def load_prices_csv(self, csv_path: Path) -> None:
+        self.data: pd.DataFrame = pd.read_csv(
+            csv_path,
+            parse_dates=True
+        )
+        self.data = self.data.loc[:,["date", "ticker", "high", "low", "close_split_adjusted"]].rename(
+            columns = {"close_split_adjusted": "close"}
+        )
+        self.data = self.data.pivot_table(index=["date"], columns="ticker", values=["high", "low", "close"])
+        self.data = self.data.sort_index(axis=1, level=1)
+        self.data.columns = [f'{y}_{x}' for x, y in self.data.columns]
+        self.data = self.data.fillna(method='ffill')
 
 
 class SignalCalculator():
 
-    def __init__(self, signals = {"aroon": {}}):
-        self.signals = signals
+    def __init__(self, signal_params = {}):
+        self.signal_params = {
+            "aroon": {"p": 25, "signal_threshold": 100}
+        }
+        for s in signal_params:
+            for p in signal_params[s]:
+                self.signal_params[s][p] = signal_params[s][p]
         self.signal_functions = {
             "aroon": {"fn": self._calculate_aroon}
-        }
+        } ## TODO: implement customizable signals function dict capable of accepting multiple signals functions
 
     def _calculate_aroon(self, stock: str, df: pd.DataFrame) -> pd.Series:
-        aroon_oscillator: List = aroon_python_deque(df[f"{stock}_high"].tolist(), df[f"{stock}_low"].tolist())
+        aroon_oscillator: List = aroon_python_deque(
+            df[f"{stock}_high"].tolist(),
+            df[f"{stock}_low"].tolist(),
+            p=self.signal_params["aroon"]["p"])
         aroon_as_series = pd.Series(
             data = aroon_oscillator,
             name = f"{stock}",
             index = df.index
         )
-        aroon_signal = aroon_signal_line(aroon_as_series)
+        aroon_signal = aroon_signal_line(
+            aroon_as_series,
+            signal_threshold=self.signal_params["aroon"]["signal_threshold"]
+        )
         return aroon_signal
 
     def _signalize_stock(self, stock, df):
         return pd.concat(
             [self.signal_functions[signal]["fn"](stock, df)
-             for signal in self.signals.keys()
+             for signal in self.signal_params.keys()
              ],
             axis = 1
         )
@@ -70,6 +95,7 @@ class TradingSimulator():
         self.current_assets = 0
         self.cash = starting_cash
         self.price_df = self._get_price_df(hd)
+        self.price_df.index = pd.to_datetime(self.price_df.index)
         self.portfolio = {}
 
     def _get_price_df(self, hd: HistoricalData):
@@ -144,15 +170,16 @@ class TradingSimulator():
         """
         From Algorithmic Trading with Python p.27
         """
-        cagr = self._calculate_cagr(price_series)
+        self.cagr = self._calculate_cagr(price_series)
         return_series = self._calculate_return_series(price_series)
-        volatility = self._calculate_annualized_volatility(return_series)
-        return (cagr - benchmark_rate) / volatility
+        self.volatility = self._calculate_annualized_volatility(return_series)
+        return (self.cagr - benchmark_rate) / self.volatility
 
     def run(self, signals_df: pd.DataFrame) -> None:
         """
         Simulate performance based upon buy/sell signals in input `signals_df`.
         """
+        signals_df.index = pd.to_datetime(signals_df.index)
         equity_curve = {}
         # Loop through days in price dataframe.
         dt_index = self.price_df.index
@@ -161,7 +188,10 @@ class TradingSimulator():
 
             # If stock is in portfolio: sell if signal is -1, or list to buy if signal is 1
             signals = signals_df.loc[dt]
-            stocks_to_sell: List[str] = [s for s in signals[signals == -1].index.tolist() if s in self.portfolio]
+            # Sell if sell signal (-1) or if stock has disappeared from exchange (nan)
+            stocks_to_sell: List[str] = [s for s in signals[signals == -1].index.tolist() if s in self.portfolio] + \
+                                        [s for s in signals[signals.isna()].index.tolist() if s in self.portfolio]
+            # Buy if buy signal (1)
             stocks_to_buy: List[str] = [s for s in signals[signals == 1].index.tolist() if s not in self.portfolio]
 
             # Sell all held stocks marked for sale
@@ -194,7 +224,7 @@ if __name__ == "__main__":
 
     # Load eod CSV files into custom HistoricalData class
     hd: HistoricalData = HistoricalData()
-    hd.load_data(eod_data_dir)
+    hd.load_eod_dir(eod_data_dir)
 
     # Calculate signals based upon Aroon Oscillator
     signal_calc: SignalCalculator = SignalCalculator()
@@ -206,9 +236,15 @@ if __name__ == "__main__":
 
     # Get simulation results
     print("Sharpe Ratio:", sim.sharpe_ratio)
+    print("CAGR:", sim.cagr)
+    print("Volatility:", sim.volatility)
     sim.equity_curve.plot(
         title = f"Equity curve based on Aroon Oscillator, Sharpe={round(sim.sharpe_ratio, 3)}",
         ylabel = "$",
         xlabel = "Date"
     )
     plt.show()
+
+    # print("AWU:", sim._calculate_sharpe_ratio(sim.price_df.AWU))
+    # print("BMG:", sim._calculate_sharpe_ratio(sim.price_df.BMG))
+    # print("CUU:", sim._calculate_sharpe_ratio(sim.price_df.CUU))
