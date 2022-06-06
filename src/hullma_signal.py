@@ -6,6 +6,7 @@ import numpy as np
 from typing import List, Dict
 import os
 import glob
+from IPython import embed as ipython_embed
 
 from vqti.performance import (
 	calculate_cagr,
@@ -32,18 +33,39 @@ def wma_trend_signal(series: pd.Series, m: int=16) -> pd.Series:
     signal = np.where(trend < trend.shift(1), -1, signal)
     return signal
 
-def hma_MACD(series: pd.Series, m1: int=16, m2: int=81) -> pd.Series:
+def rolling_volatility(series, m):
+    return series.rolling(m).std() * np.sqrt(252/m)
+ 
+def hma_zscore(series: pd.Series, m1: int=16, m2: int=81) -> pd.Series:
     assert m1 < m2, "m1 must be less than m2"
-    hma1 = pd.Series(numpy_matrix_hma(series.values, m1)) # / series.rolling(m1).std())
-    hma2 = pd.Series(numpy_matrix_hma(series.values, m2)) # / series.rolling(m2).std())
-    return (hma1 - hma2)  #volatility should be on the same length as the indicator
+    hma1 = pd.Series(numpy_matrix_hma(series.values, m1), index=series.index) # / series.rolling(m1).std())
+    hma2 = pd.Series(numpy_matrix_hma(series.values, m2), index=series.index) # / series.rolling(m2).std())
+    vol = rolling_volatility(series, m2)
+    return (hma1 - hma2) / vol #volatility should be on the same length as the indicator
 
-def hma_macd_signal(series: pd.Series, m1: int=16, m2: int=81):
-    macd = hma_MACD(series, m1, m2)
-    macd_sign = np.sign(macd)
-    macd_signal = np.where(macd_sign > macd_sign.shift(1), 1, 0)
-    macd_signal = np.where(macd_sign < macd_sign.shift(1), -1, macd_signal)
-    return macd_signal
+def hma_zscore_signal(series: pd.Series, m1: int=16, m2: int=81):
+    zscore = hma_zscore(series, m1, m2)
+    zscore_sign = np.sign(zscore)
+    zscore_shifted_sign = zscore_sign.shift(1, axis=0)
+    
+    # macd_signal = np.where(macd_sign > macd_sign.shift(1), 1, 0)
+    # macd_signal = np.where(macd_sign < macd_sign.shift(1), -1, macd_signal)
+    return zscore_sign * (zscore_sign != zscore_shifted_sign)
+
+def hma_macd_signal(series: pd.Series, m1: int=16, m2: int=49, sig: int=9) -> pd.Series:
+    assert m1 < m2, "m1 must be less than m2"
+    assert sig < m1, 'signal line must be less than m1'
+    hma1 = pd.Series(numpy_matrix_hma(series.values, m1), index=series.index) 
+    hma2 = pd.Series(numpy_matrix_hma(series.values, m2), index=series.index)
+    macd = hma1 - hma2
+    macd_sig = pd.Series(numpy_matrix_hma(macd.values, sig), index=series.index)
+    hist = macd - macd_sig
+    hist_sign = np.sign(hist)
+    hist_shifted_sign = hist_sign.shift(1, axis=0)
+    # sign = np.sign(macd_sig - macd)
+    # crossover = np.where(sign > sign.shift(1), 1, 0)
+    # crossover = np.where(sign < sign.shift(1), -1, crossover) 
+    return hist_sign * (hist_sign != hist_shifted_sign)
 
 def hma_price_crossover(series: pd.Series, m: int=16):
     series = np.array(series)
@@ -89,13 +111,18 @@ Standardization ideas (also signal line ideas)
 if __name__ == '__main__':
 
     df = load_eod('AWU')
+    '''
     df['pricecross'] = (hma_price_crossover(df.close, 4))
     df['vol'] = volatility(df.close, 14)
     df['fast'] = numpy_matrix_hma(df.close, 4)
     df['slow'] = numpy_matrix_hma(df.close, 16)
     df['crossover'] = hma_crossover(df.close,4,16)
     df['atr']= atr(df,14)
-    print(df.iloc[:40])
+    df['zscore'] = hma_zscore(df.close,4,16)
+    df['zsore_sig'] = hma_zscore_signal(df.close,4,16)
+    '''
+    df['macd_sig'] = hma_macd_signal(df.close, 16, 49, 9)
+    print(df.iloc[:100])
     # plt.grid(True, alpha = 0.3)
     # plt.plot(df.iloc[-252:]['close'], label='close')
     # plt.plot(df.iloc[-252:]['hull_ma'], label='hma')

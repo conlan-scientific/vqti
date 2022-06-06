@@ -1,5 +1,5 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_MACD
+from hullma_signal import hma_trend_signal, hma_macd_signal, hma_crossover, hma_price_crossover, hma_zscore_signal
 from typing import List
 import pandas as pd
 import numpy as np 
@@ -11,7 +11,7 @@ prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 
 # Just run apply using your signal function
 # use args to implement series and m values in a different script
-signal = prices.apply(hma_trend_signal, axis=0)
+signal = prices.apply(hma_zscore_signal, axis=0)
 signal.iloc[-1] = 0
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 

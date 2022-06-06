@@ -1,7 +1,9 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_MACD
+from hullma_signal import hma_trend_signal
 from typing import List, Dict, Any
 import pandas as pd
+import itertools
+import time
 
 # Load in data
 symbols: List[str] = data_io.get_all_symbols()
@@ -56,8 +58,8 @@ def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]
         'hma_length': hma_length,
         'max_active_positions': max_active_positions,
     }
-print(run_simulation(16,5))
-
+# print(run_simulation(16,5))
+'''
 rows = list()
 for hma_length in [4, 9, 16, 25, 49, 81]:
             for max_active_positions in [5, 20]:
@@ -68,3 +70,19 @@ for hma_length in [4, 9, 16, 25, 49, 81]:
                 )
                 rows.append(row)
 df = pd.DataFrame(rows)
+print(df)
+'''
+hma_length: List = [4, 9, 16, 25, 49, 81]
+max_active_positions: List = [10, 20, 30, 40, 50]
+parameters = list(itertools.product(hma_length, max_active_positions))
+results = []
+for i, combo in enumerate(parameters):
+        results.append(
+            run_simulation(
+                hma_length=combo[0],
+                max_active_positions=combo[1]
+            )
+        )
+df = pd.DataFrame(results)
+print(df)
+
