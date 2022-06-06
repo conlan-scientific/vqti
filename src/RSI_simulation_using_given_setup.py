@@ -1,6 +1,7 @@
 from pypm import metrics, signals, data_io, simulation
 from typing import List
 import pandas as pd
+import numpy as np
 
 # TODO: The return value of this function should be List[float]
 def pure_python_relative_strength_index(close: List[float], n: int = 14) -> List[float]:
@@ -17,20 +18,26 @@ def pure_python_relative_strength_index(close: List[float], n: int = 14) -> List
 
     return rsi
 
+def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
+    calculation_list = pure_python_relative_strength_index(close, n)
+    signal = calculation_list
+    crossUp = False
+    crossDown = False
+    for x in range(len(calculation_list)):
+        if (calculation_list[x] > 80 and not crossUp):
+            signal[x] = 1
+            crossUp = True
+        elif (calculation_list[x] < 20 and not crossDown):
+            signal[x] = -1
+            crossDown = True
+        elif (calculation_list[x] > 20 and calculation_list[x] < 80):
+            signal[x] = 0
+            crossDown = False
+            crossUp = False
+    # signal = np.where(calculation_list > 70, 1, 0) #crossover based, whne it crosses over 70 the first time 
+    # signal = np.where(calculation_list < 30, -1, signal)
+    return signal
 
-
-def rsi_signal_line_calculation(close: List[float]) -> List[float]:
-    calculation_list = pure_python_relative_strength_index(close)
-    print(calculation_list)
-    result = []
-    for x in calculation_list:
-        if (x < 30):
-            result.append(1)
-        if (x > 70):
-            result.append(-1)
-        else:
-            result.append(0)
-    return result
 
 # Load in data
 symbols: List[str] = data_io.get_all_symbols()
@@ -39,6 +46,7 @@ prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 # Just run apply using your signal function
 signal = prices.apply(rsi_signal_line_calculation, axis=0)
 # signal *= -1
+signal.iloc[-1] = 0
 
 preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
 
