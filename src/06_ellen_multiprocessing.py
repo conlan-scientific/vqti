@@ -34,7 +34,7 @@ class returnPrices(luigi.Task):
        price_df = df[['ticker', 'close_split_adjusted']]\
                 .pivot_table(index = 'date', columns='ticker', values='close_split_adjusted')
                 
-       # write to disk
+       # write to disk - Pending
        with self.output().open('w') as file_out: 
            json.dumps(price_df)
         
@@ -60,10 +60,10 @@ class runSimulation(luigi.Task):
                     lower_band = json.loads(line).get('lower_band')
                     max_position = json.loads(line).get('max_active_position')
                     
-                    ## write parameters to disk (this is a test)
+                    ## write parameters to disk (this is a test) - test passed
                     #file_out.write(str(window)+'\n')
                     
-                    # write out price_df (this is a test)
+                    # write price_df to disk (this is a test) - test pending
                     with self.output().open('w') as file_out:
                         json.dumps(self.input()) 
                     # calculate indicator 
@@ -75,7 +75,8 @@ class runSimulation(luigi.Task):
 
                                    
     def output(self):
-        ## write parameters to disk (this is a test)
+        ## write parameters to disk (this is a test) - test passed
         #return luigi.LocalTarget('luigi_files/test.txt')
         
+        ## write price_df to disk (this is a test) - test pending
         return luigi.LocalTarget('luigi_files/price_df_write.json')
