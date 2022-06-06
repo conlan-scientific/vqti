@@ -1,1 +1,0 @@
-Testing git config user.name and user.email
