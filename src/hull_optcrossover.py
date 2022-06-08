@@ -1,5 +1,5 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
+from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal, hma_crossover
 from typing import List, Dict, Any
 import pandas as pd
 import itertools
@@ -14,10 +14,10 @@ symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
-def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]:
+def run_simulation(m1: int, m2:int, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
-    signal = prices.apply(hma_trend_signal, args=([hma_length]), axis=0)
+    signal = prices.apply(hma_crossover, args=([m1,m2]), axis=0)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -59,37 +59,31 @@ def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]
         'average_active_trades': portfolio_history.average_active_trades,
         'final_equity': portfolio_history.final_equity,
 
-        'hma_length': hma_length,
+        'm1': m1,
+        'm2': m2,
         'max_active_positions': max_active_positions,
     }
 # print(run_simulation(16,5))
-'''
-rows = list()
-for hma_length in [4, 9, 16, 25, 49, 81]:
-            for max_active_positions in [5, 20]:
-                #print('Simulating', hma_length, max_active_positions)
-                row = run_simulation(
-                    hma_length,
-                    max_active_positions
-                )
-                rows.append(row)
-df = pd.DataFrame(rows)
-print(df)
-'''
+
 start= time.time()
-#hma trend signal best is 49 and 81 with 10-20 positions. top 3 pct return  0.910905 - 0.88
-hma_length: List = [4, 9, 16, 25, 49, 81]
+#hma crossover signal best 25, 49, 20-50  top 3 pct return 1.568296, 1.30, 1.26
+m1: List = [4, 9, 16, 25, 49, 81]
+m2: List = [9, 16, 25, 49, 81]
 max_active_positions: List = [10, 20, 30, 40, 50]
-parameters = list(itertools.product(hma_length, max_active_positions))
+parameters = list(itertools.product(m1, m2, max_active_positions))
 results = []
 for i, combo in enumerate(parameters):
+    if combo[0] < combo[1]:
         results.append(
             run_simulation(
-                hma_length=combo[0],
-                max_active_positions=combo[1]
+                m1=combo[0],
+                m2=combo[1],
+                max_active_positions=combo[2]
             )
         )
+    else:
+        pass
+
 df = pd.DataFrame(results)
-print(df)
-end= time.time()
+end = time.time()
 print(end - start)

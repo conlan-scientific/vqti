@@ -26,7 +26,7 @@ def hma_trend_signal(series: pd.Series, m: int=49) -> pd.Series:
     signal = np.where(trend < trend.shift(1), -1, signal)
     return signal
 
-def wma_trend_signal(series: pd.Series, m: int=16) -> pd.Series:
+def wma_trend_signal(series: pd.Series, m: int=30) -> pd.Series:
     wma = pd.Series(numpy_matrix_wma(series.values, m))
     trend = np.sign(wma - wma.shift(1))
     signal = np.where(trend > trend.shift(1), 1, 0)
@@ -79,6 +79,7 @@ def hma_crossover(series: pd.Series, m1: int=16, m2: int=81)-> pd.Series:
     return crossover
 
 def atr(dataframe: pd.DataFrame, n: int=14,):
+    assert pd.Index(['close', 'high', 'low']).isin(df.columns), 'Data frame must have high, low, close in columns'
     high_low = dataframe['high'] - dataframe['low']
     high_close = np.abs(dataframe['high'] - dataframe['close'].shift())
     low_close = np.abs(dataframe['low'] - dataframe['close'].shift())
@@ -186,6 +187,7 @@ if __name__ == '__main__':
                 if stock in stocks_im_holding:
                     shares_sold = prices_df.loc[date][f'{stock}'] * stocks_im_holding.get(stock)
                     cash += shares_sold
+                    portfolio_value -= shares_sold
                     stocks_im_holding.pop(stock)
                 else:
                     pass
@@ -201,9 +203,14 @@ if __name__ == '__main__':
                     portfolio_value += shares_bought * prices_df.loc[date][f'{stock}']
                     portfolio.append(stock)
                     stocks_im_holding[f'{stock}'] =  shares_bought
-        
+        if date == signal_df.index[-1]:
+            for stock in stocks_im_holding: 
+                shares_sold = prices_df.loc[date][f'{stock}'] * stocks_im_holding.get(stock)
+                cash += shares_sold
+                portfolio_value -= shares_sold
+    
         equity_curve[f'{date}'] = cash + portfolio_value
-                
+    
     equity_curve_df = pd.Series(equity_curve, name = 'total_equity')
     equity_curve_df.index.name = 'Date'
     # Plot the equity curve

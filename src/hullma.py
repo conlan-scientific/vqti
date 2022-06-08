@@ -291,7 +291,7 @@ if __name__ == '__main__':
 	result = pandas_hma(df.close, 4)
 	print("Done!")
 	'''
-	# unittest.main()
+	unittest.main()
  
 	# pure python wma test
 	input_data = [1,2,3,4,5,6,7,8,9,10]
