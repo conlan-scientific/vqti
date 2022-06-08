@@ -1,5 +1,5 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
+from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal, wma_trend_signal
 from typing import List, Dict, Any
 import pandas as pd
 import itertools
@@ -14,10 +14,10 @@ symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
-def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]:
+def run_simulation(wma_length: int, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
-    signal = prices.apply(hma_trend_signal, args=([hma_length]), axis=0)
+    signal = prices.apply(wma_trend_signal, args=([wma_length]), axis=0)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -59,7 +59,7 @@ def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]
         'average_active_trades': portfolio_history.average_active_trades,
         'final_equity': portfolio_history.final_equity,
 
-        'hma_length': hma_length,
+        'wma_length': wma_length,
         'max_active_positions': max_active_positions,
     }
 # print(run_simulation(16,5))
@@ -77,15 +77,15 @@ df = pd.DataFrame(rows)
 print(df)
 '''
 start= time.time()
-#hma trend signal best is 49 and 81 with 10-20 positions. top 3 pct return  0.910905 - 0.88
-hma_length: List = [4, 9, 16, 25, 49, 81]
+#wma trend signal best is 30(10-20 positions) and 100 (20-50) positions. top 3 pct return  1.33, 0.98, 0.96
+wma_length: List = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 75, 100, 200]
 max_active_positions: List = [10, 20, 30, 40, 50]
-parameters = list(itertools.product(hma_length, max_active_positions))
+parameters = list(itertools.product(wma_length, max_active_positions))
 results = []
 for i, combo in enumerate(parameters):
         results.append(
             run_simulation(
-                hma_length=combo[0],
+                wma_length=combo[0],
                 max_active_positions=combo[1]
             )
         )
