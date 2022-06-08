@@ -10,7 +10,7 @@ from typing import List
 
 
 # TODO: The return value of this function should be List[float]
-def pure_python_relative_strength_index(close: List[float], n: int = 10) -> List[float]:
+def relative_strength_index(close: List[float], n: int = 10) -> List[float]:
     upList = close.clip(lower = 0)
     downList = -1 * close.clip(upper = 0)
     upEwmList = upList.ewm(com = n - 1, adjust = True, min_periods = n).mean() # Units are change-in-dollars
@@ -45,7 +45,7 @@ def pure_python_relative_strength_index(close: List[float], n: int = 10) -> List
 #     return relative_strength_factor.rolling(window = n).apply(lambda x: relative_strength_index_calculation(x))
 
 def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
-    calculation_list = pure_python_relative_strength_index(close, n)
+    calculation_list = relative_strength_index(close, n)
     signal = calculation_list
     crossUp = False
     crossDown = False
@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
 
     df = load_eod('AWU')
-    result = pure_python_relative_strength_index(df.close)
+    result = relative_strength_index(df.close)
 
     # Thresholds of 30 and 70 are standardized
     # Thresholds in general are standardized
