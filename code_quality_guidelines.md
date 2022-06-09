@@ -45,8 +45,8 @@ s.apply(lambda x: some_dict[x]) # Hard
 
 
 # Non-unique indexes and column names are completely banned
-s.loc['2020-01-01'] # returns a number for unique index
-s.loc['2020-01-01'] # returns a series for non-unique index
+series.loc['2020-01-01'] # returns a number for unique index
+series.loc['2020-01-01'] # returns a series for non-unique index
 
 df.loc['2020-01-01'] # returns a series for unique index
 df.loc['2020-01-01'] # returns a data frame for non-unique index

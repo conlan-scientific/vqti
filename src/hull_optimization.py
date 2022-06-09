@@ -76,7 +76,8 @@ for hma_length in [4, 9, 16, 25, 49, 81]:
 df = pd.DataFrame(rows)
 print(df)
 '''
-#hma trend signal
+start= time.time()
+#hma trend signal best is 49 and 81 with 10-20 positions. top 3 pct return  0.910905 - 0.88
 hma_length: List = [4, 9, 16, 25, 49, 81]
 max_active_positions: List = [10, 20, 30, 40, 50]
 parameters = list(itertools.product(hma_length, max_active_positions))
@@ -90,3 +91,5 @@ for i, combo in enumerate(parameters):
         )
 df = pd.DataFrame(results)
 print(df)
+end= time.time()
+print(end - start)

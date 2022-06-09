@@ -46,22 +46,26 @@ def relative_strength_index(close: List[float], n: int = 10) -> List[float]:
 
 def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
     calculation_list = relative_strength_index(close, n)
-    signal = calculation_list
-    crossUp = False
-    crossDown = False
-    for x in range(len(calculation_list)):
-        if (calculation_list[x] > 70 and not crossUp):
-            signal[x] = 1
-            crossUp = True
-        elif (calculation_list[x] < 30 and not crossDown):
-            signal[x] = -1
-            crossDown = True
-        elif (calculation_list[x] > 30 and calculation_list[x] < 70):
-            signal[x] = 0
-            crossDown = False
-            crossUp = False
-    # signal = np.where(calculation_list > 70, 1, 0) #crossover based, whne it crosses over 70 the first time 
-    # signal = np.where(calculation_list < 30, -1, signal)
+    # signal = calculation_list
+    # crossUp = False
+    # crossDown = False
+    # for x in range(len(calculation_list)):
+    #     if (calculation_list[x] >= 70 and not crossUp):
+    #         signal[x] = 1
+    #         crossUp = True
+    #         crossDown = False
+    #     elif (calculation_list[x] <= 30 and not crossDown):
+    #         signal[x] = -1
+    #         crossDown = True
+    #         crossUp = False
+    #     elif (calculation_list[x] > 30 and calculation_list[x] < 70):
+    #         signal[x] = 0
+    #         crossDown = False
+    #         crossUp = False
+    #     else:
+    #         signal[x] = 0
+    signal = np.where(calculation_list > 70, 1, 0) #crossover based, whne it crosses over 70 the first time 
+    signal = np.where(calculation_list < 30, -1, signal)
     return signal
 
 if __name__ == '__main__':

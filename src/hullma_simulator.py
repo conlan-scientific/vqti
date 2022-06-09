@@ -11,7 +11,7 @@ prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 
 # Just run apply using your signal function
 # use args to implement series and m values in a different script
-signal = prices.apply(hma_zscore_signal, axis=0)
+signal = prices.apply(hma_zscore_signal, args=[25,45], axis=0)
 signal.iloc[-1] = 0
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
@@ -31,7 +31,7 @@ assert signal.columns.equals(preference.columns)
 # Run the simulator
 simulator = simulation.SimpleSimulator(
     initial_cash=100000,
-    max_active_positions=5,
+    max_active_positions=20,
     percent_slippage=0.0005,
     trade_fee=1,
 )
