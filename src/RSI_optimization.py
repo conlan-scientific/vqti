@@ -1,6 +1,5 @@
 from RSI_jake import rsi_signal_line_calculation
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_MACD
 from typing import List, Dict, Any
 import pandas as pd
 
@@ -13,6 +12,7 @@ def run_simulation(periods: int, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
     signal = prices.apply(rsi_signal_line_calculation, args=[periods], axis=0)
+    print(signal)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -62,7 +62,6 @@ print(run_simulation(16,5))
 rows = list()
 for periods in [5, 10, 14, 20, 40, 80, 100]:
     for max_active_positions in [5, 20]:
-        #print('Simulating', hma_length, max_active_positions)
         print('Simulating', '...', periods, max_active_positions)
         row = run_simulation(
             periods,

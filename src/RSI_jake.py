@@ -9,7 +9,6 @@ from typing import List
 # "List" is the type hint and "list" is the list constructor.
 
 
-# TODO: The return value of this function should be List[float]
 def relative_strength_index(close: List[float], n: int = 10) -> List[float]:
     upList = close.clip(lower = 0)
     downList = -1 * close.clip(upper = 0)
@@ -24,25 +23,6 @@ def relative_strength_index(close: List[float], n: int = 10) -> List[float]:
 
     return rsi
 
-    # TODO: The result should be a List[float] of equal length to the input.
-
-# def pandas_relative_strength_index(close: pd.Series, n: int = 10) -> List[float]:
-    
-#     # TODO: The pandas version looks a lot different, because the optimal pandas
-#     # approach will rely on vectorized operations.
-#     # 
-#     # Here is a hint.
-#     delta = close - close.shift(1)
-#     up_series = delta.clip(lower = 0)
-#     delta2 = close.shift(1) - close
-#     down_series = delta2.clip(lower = 0)
-    
-#     #according to wikipedia, you use either use a smooth moving average or exponential moving average, unsure how to do either via pandas
-#     up_series_ema = up_series.ewm(span = 30, adjust = False).mean()
-#     down_series_ema = down_series.ewm(span = 30, adjust = False).mean()
-
-#     relative_strength_factor = up_series_ema.div(down_series_ema)
-#     return relative_strength_factor.rolling(window = n).apply(lambda x: relative_strength_index_calculation(x))
 
 def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]:
     calculation_list = relative_strength_index(close, n)
@@ -60,6 +40,8 @@ def rsi_signal_line_calculation(close: List[float], n : int = 10) -> List[float]
             signal[x] = 0
             crossDown = False
             crossUp = False
+        else:
+            signal[x] = 0
     # signal = np.where(calculation_list > 70, 1, 0) #crossover based, whne it crosses over 70 the first time 
     # signal = np.where(calculation_list < 30, -1, signal)
     return signal
