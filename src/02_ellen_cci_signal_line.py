@@ -14,9 +14,9 @@ Pending:
 """
 import pandas as pd
 from vqti.load import load_eod
-from cci_ellen import *
-from load_ellen import *
-from cci_ellen import *
+from vqti.cci_ellen import *
+from vqti.load_ellen import *
+from vqti.cci_ellen import *
 
 #??? Tried to implement my thoughts into code as much as possible. I'm going to leave it be for now, but come back to my questions below at some point
 def normal_distribution_signals_generator(series: pd.Series, num_std: int = 2) -> pd.Series:

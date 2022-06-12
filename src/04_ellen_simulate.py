@@ -5,7 +5,7 @@ Created on Tue May 24 08:54:17 2022
 
 Explored the performance of cci via two simulators. 
 
-Note, on 100 tickers, it takes ~0.14 seconds to run quick simulator and 
+On 100 tickers, it takes ~0.14 seconds to run quick simulator and 
 ~3 seconds to run chris simulator. 
 
 Pending: 
@@ -17,10 +17,10 @@ Pending:
 """
 import pandas as pd
 import numpy as np
-from load_ellen import * 
-from cci_ellen import * 
-from signal_ellen import *
-from simulate_ellen import * 
+from vqti.load_ellen import * 
+from vqti.cci_ellen import * 
+from vqti.signal_ellen import *
+from vqti.simulate_ellen import * 
 from vqti.performance import calculate_cagr, calculate_sharpe_ratio
 from pypm import metrics, signals, data_io, simulation
 

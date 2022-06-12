@@ -3,22 +3,14 @@
 """
 Created on Tue May 31 08:09:03 2022
 
-Optimize using grid search. This runs on 100 ticker dataframe. 
+Second python script running through 6305 tickers and 64 parameter sets stopped in the middle
+due to 'assert self.cash >= 0, 'Spent cash you do not have.'' error. It did completed 35 sets 
+and spent 5.3 hours (while I was running another python script and using the internet) to do so. 
 
-On 100 tickers, it took 70 minutes to run chris simulator for 512 sets of parameters.  
-    
-Encountered: 
-    * AssertionError: Cannot buy zero or negative shares. - I think I circumvented this by commenting out the line of code. Return to this. 
-    
-    * Simulating ... 1 momentum 1 4 20 - I think I ignored this warning and it returned nans for sharpe ratio. Return to this. 
-    /Users/ellenyu/vqti/src/pypm/metrics.py:78: RuntimeWarning: invalid value encountered in double_scalars
-    return (cagr - benchmark_rate) / volatility
-
-    * assert self.cash >= 0, 'Spent cash you do not have.' - I think I circumvented this by raising initial_cash. Return to this. 
-    AssertionError: Spent cash you do not have.
-    
-    * Why are there 86 nans in sharpe_ratio? When there is only 100 tickers.  
-    
+Notice the nan in percent returns and cagr, the spent cash you do not have, not to mention the 
+jensen alpha function I commented out. Clearly, I have to spend time in troubleshooting the simulator 
+(which I will do so on the smaller set of data). Update: I believe this is complete as of June 2022'
+ 
 @author: ellenyu
 
 """
@@ -31,11 +23,13 @@ from pypm import metrics, signals, data_io, simulation
 from typing import List, Dict, Any
 from time import perf_counter
 
-#%%
-# Load in prices_df - 100 tickers
-price_df = load_all_onecolumn()
-#preference = pd.DataFrame(0, index=price_df.index, columns=price_df.columns)
-preference = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
+
+# Load in prices_df - extended tickers
+price_df = pd.read_csv('/Users/ellenyu/Desktop/UVA MSDS/Capstone/Coding/prices.csv', parse_dates = ['date'], index_col='date')
+price_df = price_df[['ticker', 'close_split_adjusted']]
+price_df = price_df.pivot_table(index = 'date', columns='ticker', values='close_split_adjusted')
+#preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
+preference_df = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
 #%%
 ## Following Chris' model 
@@ -43,7 +37,7 @@ def run_simulation (window: int, strategy_type: str, lower_band: int, upper_band
     
     # Generate signals
     indicator_df = price_df.apply(lambda col: python_ccimodified_loop(col.tolist(), window=window), axis=0)
-    signal_df = cci_signals_generator(indicator_df, strategy_type, upper_band, lower_band)
+    signal_df = cci_signals_generator(series=indicator_df, strategy_type=strategy_type, upper_band=upper_band, lower_band=lower_band)
     
     # Do nothing on the last day
     signal_df.iloc[-1] = 0
@@ -59,7 +53,7 @@ def run_simulation (window: int, strategy_type: str, lower_band: int, upper_band
         percent_slippage=0.0005,
         trade_fee=1,
     )
-    simulator.simulate(price = price_df, signal = signal_df, preference = preference)
+    simulator.simulate(price = price_df, signal = signal_df, preference = preference_df)
 
 
     portfolio_history = simulator.portfolio_history
@@ -72,7 +66,7 @@ def run_simulation (window: int, strategy_type: str, lower_band: int, upper_band
         'sharpe_ratio': portfolio_history.sharpe_ratio,
         'spy_cagr': portfolio_history.spy_cagr,
         'excess_cagr': portfolio_history.excess_cagr,
-        'jensens_alpha': portfolio_history.jensens_alpha,
+        #'jensens_alpha': portfolio_history.jensens_alpha_v2,
         'dollar_max_drawdown': portfolio_history.dollar_max_drawdown,
         'percent_max_drawdown': portfolio_history.percent_max_drawdown,
         'log_max_drawdown_ratio': portfolio_history.log_max_drawdown_ratio,
@@ -88,9 +82,10 @@ def run_simulation (window: int, strategy_type: str, lower_band: int, upper_band
         'max_active_positions': max_active_positions,
     }
 
+#%%
 start = perf_counter()
 rows = list()
-for window in [1, 3, 5, 10, 15, 20, 40, 60]:
+for window in [30, 50]:
     for strategy_type in ['reversal', 'momentum']: 
         for lower_band in [1, 2, 3, 4]: 
             for upper_band in [1, 2, 3, 4]: 
@@ -104,42 +99,31 @@ for window in [1, 3, 5, 10, 15, 20, 40, 60]:
                         max_active_positions
                     )
                     rows.append(row)
-df = pd.DataFrame(rows)
+optimization_df = pd.DataFrame(rows)
 stop = perf_counter()
-print('elapsed time:', stop-start, 'seconds\n') #elapsed time: 4241.182944779997 seconds = ~70 minutes 
+print('elapsed time:', stop-start, 'seconds\n') #elapsed time: 19009.515875532 seconds = 5.280421076536667 hours
 
 # Save to csv 
-#df.to_csv('/Users/ellenyu/vqti/src/optimization_100_512.csv')
+optimization_df.to_csv('/Users/ellenyu/vqti/src/optimization_6305_35_2.csv')
 
 #%%
 # load grid serach df 
-df = pd.read_csv('optimization_100_512.csv')
+optimization_df = pd.read_csv('/Users/ellenyu/vqti/src/optimization_6305_35_2.csv')
 
 # Check for nulls 
-df.isnull().sum()
+optimization_df.isnull().sum()
 
 # Max cagr
-df.cagr.max() #0.086376996717282 
+optimization_df.cagr.max() # nan
 
-#%%
 # Visualize the results
-
-# Scatter plot 
-for i in ['window_length', 'strategy_type', 'lower_band', 'upper_band', 'max_active_positions']:
-    plt.scatter(x=df[i], y=df['cagr'])
-    plt.ylabel('cagr')
-    plt.xlabel(i)
-    plt.title('{} and CAGR'.format(i))
-    plt.show()
-
 # Box plot 
 for i in ['window_length', 'strategy_type', 'lower_band', 'upper_band', 'max_active_positions']:
-    boxplot = df.boxplot(column=['cagr'], by=i)
+    boxplot = optimization_df.boxplot(column=['cagr'], by=i)
     boxplot.plot()
     plt.show()
     
 # Quick observations
-
 ## window length 
 # for the majority of window lengths, the median cagr is 0 which means 50% of cagrs are negative, etc. 
 # lower window lengths have tighter cagr ranges 
@@ -157,9 +141,8 @@ for i in ['window_length', 'strategy_type', 'lower_band', 'upper_band', 'max_act
 ## max active positions 
 # max active positions of 20 seems to be better than 5 
 
-#%% 
 ## lower band + reversal 
-df_reversal = df.query("strategy_type =='reversal'")
+df_reversal = optimization_df.query("strategy_type =='reversal'")
 
 boxplot = df_reversal .boxplot(column=['cagr'], by=df_reversal['upper_band'])
 boxplot.plot()
