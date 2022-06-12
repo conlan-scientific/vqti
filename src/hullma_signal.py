@@ -239,19 +239,3 @@ if __name__ == '__main__':
     # plt.plot(equity_curve_df)
     # plt.show()
     # Measure the sharpe ratio
-
-
-    # unit test for hma_trend_signal
-    ## generate the signals 
-    signal = hma_trend_signal(df.close)
-    ## find the indices where signals = 1 or -1
-    signal_series = pd.Series(signal)
-    signal_index = signal_series.loc[signal_series!=0].index
-    ## general the trends 
-    hull_ma = pd.Series(numpy_matrix_hma(df.close.values, m=49))
-    trend = np.sign(hull_ma - hull_ma.shift(1))
-    ## find the indices where signals = 1 or -1
-    trend_index = trend.loc[trend!=trend.shift(1)].index
-    ##assert the two indices are equal
-    assert trend_index.equals(signal_index), "Test Failed"
-    assert np.array_equal(trend_index, signal_index), "Test Failed"
