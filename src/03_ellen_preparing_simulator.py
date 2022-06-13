@@ -8,9 +8,9 @@ Load all tickers and generate signals dataframe to prepare data for simulation.
 @author: ellenyu
 
 """
-from load_ellen import * 
-from cci_ellen import *
-from signal_ellen import *
+from vqti.load_ellen import * 
+from vqti.cci_ellen import *
+from vqti.signal_ellen import *
 from time import perf_counter
 
 #%%

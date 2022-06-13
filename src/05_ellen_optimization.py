@@ -5,7 +5,7 @@ Created on Tue May 31 08:09:03 2022
 
 Optimize using grid search. This runs on 100 ticker dataframe. 
 
-It took 70 minutes to run chris simulator on 512 sets of parameters. 
+On 100 tickers, it took 70 minutes to run chris simulator for 512 sets of parameters.  
     
 Encountered: 
     * AssertionError: Cannot buy zero or negative shares. - I think I circumvented this by commenting out the line of code. Return to this. 
@@ -16,6 +16,8 @@ Encountered:
 
     * assert self.cash >= 0, 'Spent cash you do not have.' - I think I circumvented this by raising initial_cash. Return to this. 
     AssertionError: Spent cash you do not have.
+    
+    * Why are there 86 nans in sharpe_ratio? When there is only 100 tickers.  
     
 @author: ellenyu
 
@@ -30,17 +32,9 @@ from typing import List, Dict, Any
 from time import perf_counter
 
 #%%
-# # Load in prices_df - 100 tickers
-# price_df = load_all_onecolumn()
-# #preference = pd.DataFrame(0, index=price_df.index, columns=price_df.columns)
-# preference = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
-
-#%%
-# Load in prices_df - extended tickers
-price_df = pd.read_csv('/Users/ellenyu/Desktop/UVA MSDS/Capstone/Coding/prices.csv', parse_dates = ['date'], index_col='date')
-price_df = price_df[['ticker', 'close_split_adjusted']]
-price_df = price_df.pivot_table(index = 'date', columns='ticker', values='close_split_adjusted')
-#preference = pd.DataFrame(0, index=prices.index, columns=prices.columns)
+# Load in prices_df - 100 tickers
+price_df = load_all_onecolumn()
+#preference = pd.DataFrame(0, index=price_df.index, columns=price_df.columns)
 preference = price_df.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
 #%%
@@ -115,11 +109,11 @@ stop = perf_counter()
 print('elapsed time:', stop-start, 'seconds\n') #elapsed time: 4241.182944779997 seconds = ~70 minutes 
 
 # Save to csv 
-df.to_csv('/Users/ellenyu/vqti/src/optimization.csv')
+#df.to_csv('/Users/ellenyu/vqti/src/optimization_100_512.csv')
 
 #%%
 # load grid serach df 
-df = pd.read_csv('optimization.csv')
+df = pd.read_csv('optimization_100_512.csv')
 
 # Check for nulls 
 df.isnull().sum()
@@ -175,4 +169,4 @@ plt.ylabel('')
 plt.xlabel('')
 plt.show()
 
-# I could go for a reversal strategy + lower_band =4 or lower_band = 1
+# I could go for a reversal strategy + lower_band = 4 or lower_band = 1

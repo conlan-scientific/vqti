@@ -125,8 +125,29 @@ if __name__ == '__main__':
     # plt.plot(df.iloc[-252:]['signal'] * 100, label='signal')
     # plt.legend(loc=2)
     # plt.show()
-
-    os.chdir('data\eod')
+    
+    # unit test for hma_trend_signal
+    ## generate the signals 
+    signal = hma_trend_signal(df.close)
+    print("signal:", signal, '\n')
+    ## find the indices where signals = 1 or -1
+    signal_series = pd.Series(signal)
+    signal_index = signal_series.loc[signal_series!=0].index
+    print("signal_index:", signal_index, '\n')
+    ## general the trends 
+    hull_ma = pd.Series(numpy_matrix_hma(df.close.values, m=49))
+    trend = np.sign(hull_ma - hull_ma.shift(1))
+    trend = trend.fillna(0)
+    print("trend:", trend, '\n')
+    ## find the indices where signals = 1 or -1
+    trend_index = trend.loc[trend!=trend.shift(1)].index
+    trend_index = trend_index.delete([0, 1])
+    print("trend_index:", trend_index, '\n')
+    ##assert the two indices are equal
+    assert trend_index.equals(signal_index), "Test Failed"
+    assert np.array_equal(trend_index, signal_index), "Test Failed"
+    
+    os.chdir('data\eod') #FileNotFoundError: [Errno 2] No such file or directory: 'data\\eod'
     extension = 'csv'
     all_filenames = [i for i in glob.glob('*.{}'.format(extension))] # creates a list of symbols.csv
     stock_symbols = [i.replace('.csv', '') for i in all_filenames] # removes .csv from end of symbols
@@ -218,7 +239,3 @@ if __name__ == '__main__':
     # plt.plot(equity_curve_df)
     # plt.show()
     # Measure the sharpe ratio
-
-
-
-
