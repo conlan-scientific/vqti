@@ -66,24 +66,30 @@ def run_simulation(m1: int, m2:int, max_active_positions: int) -> Dict[str, Any]
 # print(run_simulation(16,5))
 
 start= time.time()
+def run_hma_crossover_simulation():
 #hma crossover signal best 25, 49, 20-50  top 3 pct return 1.568296, 1.30, 1.26
-m1: List = [4, 9, 16, 25, 49, 81]
-m2: List = [9, 16, 25, 49, 81]
-max_active_positions: List = [10, 20, 30, 40, 50]
-parameters = list(itertools.product(m1, m2, max_active_positions))
-results = []
-for i, combo in enumerate(parameters):
-    if combo[0] < combo[1]:
-        results.append(
-            run_simulation(
-                m1=combo[0],
-                m2=combo[1],
-                max_active_positions=combo[2]
+    m1: List = [4, 9, 16, 25, 49, 81]
+    m2: List = [9, 16, 25, 49, 81]
+    max_active_positions: List = [10, 20, 30, 40, 50]
+    parameters = list(itertools.product(m1, m2, max_active_positions))
+    results = []
+    for i, combo in enumerate(parameters):
+        if combo[0] < combo[1]:
+            results.append(
+                run_simulation(
+                    m1=combo[0],
+                    m2=combo[1],
+                    max_active_positions=combo[2]
+                )
             )
-        )
-    else:
-        pass
+        else:
+            pass
 
-df = pd.DataFrame(results)
+    df = pd.DataFrame(results)
+    return df
+
+run_hma_crossover_simulation
+
 end = time.time()
 print(end - start)
+
