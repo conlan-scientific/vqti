@@ -6,6 +6,7 @@ import numpy as np
 from typing import List, Dict
 import os
 import glob
+from pathlib import Path
 from IPython import embed as ipython_embed
 
 from vqti.performance import (
@@ -147,6 +148,7 @@ if __name__ == '__main__':
     assert trend_index.equals(signal_index), "Test Failed"
     assert np.array_equal(trend_index, signal_index), "Test Failed"
     
+    # eod_data_dir: Path = Path(__file__).parent.parent / "data" / "eod"
     os.chdir('data\eod') #FileNotFoundError: [Errno 2] No such file or directory: 'data\\eod'
     extension = 'csv'
     all_filenames = [i for i in glob.glob('*.{}'.format(extension))] # creates a list of symbols.csv

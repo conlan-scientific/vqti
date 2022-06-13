@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import List
 # Hull Moving Average
-# HMA= WMA(2*WMA(n/2) − WMA(n)),sqrt(n))
+# HMA = WMA(2*WMA(n/2) − WMA(n)),sqrt(n))
 # recommended m = 4, 9, 16, 25, 49, 81
 
 # fastest wma
@@ -26,22 +26,22 @@ def calculate_numpy_matrix_wma(values: np.ndarray, m: int=16) -> np.ndarray:
     front_pad = max(m - 1, 0)
 
     # Initialize the output array
-    y = np.empty((n,))
+    wma = np.empty((n,))
 
     # Pad with na values
-    y[:front_pad] = np.nan
+    wma[:front_pad] = np.nan
 
     # Build a matrix to multiply with weight vector
     q = np.empty((n - front_pad, m))
     for j in range(m):
         q[:,j] = values[j:(j+n-m+1)]
 
-    y[front_pad: len(values)] = q.dot(weights)
+    wma[front_pad: len(values)] = q.dot(weights)
 
-    return y
+    return wma
 
 # fastest hma
-def calculate_numpy_matrix_hma(values: np.ndarray, m: int=10) -> np.array:
+def calculate_numpy_matrix_hma(values: np.ndarray, m: int=10) -> np.ndarray:
 	assert m >= 1, 'Period must be a positive integer'
 	assert type(m) is int, 'Period must be a positive integer'
 	assert len(values) >= m, 'Values must be >= period m'
@@ -85,9 +85,6 @@ def _calculate_pure_python_wma(values: List[float], m: int=10)-> List[float]:
 
 
 def _calculate_pure_python_hma(values: List[float], m: int=16) -> List[float]:
-	"""
-	This is a smoothed 0th order calculation expressed in dollars per share
-	"""
 	assert m >= 1, 'Period must be a positive integer'
 	assert type(m) is int, 'Period must be a positive integer'
 	assert len(values) >= m, 'Values must be >= period m'
@@ -129,17 +126,17 @@ def _calculate_numpy_wma(values: np.array, m: int=10) -> np.array:
 	front_pad = max(m-1, 0)
    
     # Initialize the output array
-	y = np.empty((n,))
+	wma = np.empty((n,))
 
     # Pad with na values
-	y[:front_pad] = np.nan
+	wma[:front_pad] = np.nan
     
     # Compute the moving average
 	for i in range(front_pad, n):
 		x = values[i]
-		y[i] = weights.dot(values[(i-m+1):i+1])
+		wma[i] = weights.dot(values[(i-m+1):i+1])
 
-	return y
+	return wma
 
 
 def _calculate_numpy_hma(values: np.ndarray, m: int=16) -> np.array:
