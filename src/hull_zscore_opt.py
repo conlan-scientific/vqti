@@ -1,5 +1,5 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal, hma_crossover
+from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
 from typing import List, Dict, Any
 import pandas as pd
 import itertools
@@ -17,7 +17,7 @@ preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 def run_simulation(m1: int, m2:int, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
-    signal = prices.apply(hma_crossover, args=([m1,m2]), axis=0)
+    signal = prices.apply(hma_zscore_signal, args=([m1,m2]), axis=0)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -63,33 +63,26 @@ def run_simulation(m1: int, m2:int, max_active_positions: int) -> Dict[str, Any]
         'm2': m2,
         'max_active_positions': max_active_positions,
     }
-# print(run_simulation(16,5))
 
 start= time.time()
-def run_hma_crossover_simulation():
-#hma crossover signal best 25, 49, 20-50  top 3 pct return 1.568296, 1.30, 1.26
-    m1: List = [4, 9, 16, 25, 49, 81]
-    m2: List = [9, 16, 25, 49, 81]
-    max_active_positions: List = [10, 20, 30, 40, 50]
-    parameters = list(itertools.product(m1, m2, max_active_positions))
-    results = []
-    for i, combo in enumerate(parameters):
-        if combo[0] < combo[1]:
-            results.append(
-                run_simulation(
-                    m1=combo[0],
-                    m2=combo[1],
-                    max_active_positions=combo[2]
-                )
+#hma zscore signal best 25, 49, 20.  top 3 pct return 1.542599 1.333573 1.231270
+m1: List = [4, 9, 16, 25, 49, 81]
+m2: List = [9, 16, 25, 49, 81]
+max_active_positions: List = [10, 20, 30, 40, 50]
+parameters = list(itertools.product(m1, m2, max_active_positions))
+results = []
+for i, combo in enumerate(parameters):
+    if combo[0] < combo[1]:
+        results.append(
+            run_simulation(
+                m1=combo[0],
+                m2=combo[1],
+                max_active_positions=combo[2]
             )
-        else:
-            pass
+        )
+    else:
+        pass
 
-    df = pd.DataFrame(results, dtype='float64', name='hma_crossover_simulation' )
-    return df
-
-df = run_hma_crossover_simulation()
-print(df)
+df = pd.DataFrame(results)
 end = time.time()
 print(end - start)
-

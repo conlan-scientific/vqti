@@ -58,7 +58,7 @@ def test_pure_python_aroon():
         assert ground_truth_result[i] == test_result[i]
 
 
-@time_this
+# @time_this
 def aroon_pandas(high: pd.Series, low: pd.Series, p: int=25) -> pd.Series:
     """
     This is an O(np) algorithm
@@ -76,7 +76,7 @@ def aroon_pandas(high: pd.Series, low: pd.Series, p: int=25) -> pd.Series:
     aroon_high: pd.Series = 100 * (p - high_idx)/p
     aroon_low: pd.Series = 100 * (p - low_idx)/p
     aroon_oscillator: pd.Series = aroon_high - aroon_low
-    return aroon_oscillator
+    return pd.Series(aroon_oscillator.values, index=high.index)
 
 
 def test_pandas_aroon():

@@ -1,9 +1,8 @@
-from pypm import metrics, signals, data_io, simulation
-from macd_signals import calc_pandas_macd_signal, calc_pandas_macd, calc_pandas_macd_signal_v2
+from pypm import metrics, data_io, simulation
+from vqti.indicators.macd_signals import calc_pandas_macd_signal
 from typing import List
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 signal = prices.apply(calc_pandas_macd_signal, axis=0, result_type='expand')

@@ -6,6 +6,7 @@ import numpy as np
 from typing import List, Dict
 import os
 import glob
+from pathlib import Path
 from IPython import embed as ipython_embed
 
 from vqti.performance import (
@@ -38,8 +39,8 @@ def rolling_volatility(series, m):
  
 def hma_zscore(series: pd.Series, m1: int=16, m2: int=81) -> pd.Series:
     assert m1 < m2, "m1 must be less than m2"
-    hma1 = pd.Series(numpy_matrix_hma(series.values, m1), index=series.index) # / series.rolling(m1).std())
-    hma2 = pd.Series(numpy_matrix_hma(series.values, m2), index=series.index) # / series.rolling(m2).std())
+    hma1 = pd.Series(numpy_matrix_hma(series.values, m1), index=series.index)
+    hma2 = pd.Series(numpy_matrix_hma(series.values, m2), index=series.index) 
     vol = rolling_volatility(series, m2)
     return (hma1 - hma2) / vol #volatility should be on the same length as the indicator
 
@@ -93,6 +94,16 @@ def volatility(series: pd.Series, n: int=14):
     vol = log_returns.rolling(window=n).std()*np.sqrt(n)
     return vol
 
+def pandas_ema(series, m: int=5):
+    return series.ewm(span=m, adjust=False).mean()
+
+def ema_trend_signal(series: pd.Series, m: int=49) -> pd.Series:
+    ema = pd.Series(pandas_ema(series.values, m))
+    trend = np.sign(ema - ema.shift(1))
+    signal = np.where(trend > trend.shift(1), 1, 0)
+    signal = np.where(trend < trend.shift(1), -1, signal)
+    return signal
+
 
 """
 Standardization ideas (also signal line ideas)
@@ -125,8 +136,30 @@ if __name__ == '__main__':
     # plt.plot(df.iloc[-252:]['signal'] * 100, label='signal')
     # plt.legend(loc=2)
     # plt.show()
-
-    os.chdir('data\eod')
+    
+    # unit test for hma_trend_signal
+    ## generate the signals 
+    signal = hma_trend_signal(df.close)
+    print("signal:", signal, '\n')
+    ## find the indices where signals = 1 or -1
+    signal_series = pd.Series(signal)
+    signal_index = signal_series.loc[signal_series!=0].index
+    print("signal_index:", signal_index, '\n')
+    ## general the trends 
+    hull_ma = pd.Series(numpy_matrix_hma(df.close.values, m=49))
+    trend = np.sign(hull_ma - hull_ma.shift(1))
+    trend = trend.fillna(0)
+    print("trend:", trend, '\n')
+    ## find the indices where signals = 1 or -1
+    trend_index = trend.loc[trend!=trend.shift(1)].index
+    trend_index = trend_index.delete([0, 1])
+    print("trend_index:", trend_index, '\n')
+    ##assert the two indices are equal
+    assert trend_index.equals(signal_index), "Test Failed"
+    assert np.array_equal(trend_index, signal_index), "Test Failed"
+    
+    # eod_data_dir: Path = Path(__file__).parent.parent / "data" / "eod"
+    os.chdir('data\eod') #FileNotFoundError: [Errno 2] No such file or directory: 'data\\eod'
     extension = 'csv'
     all_filenames = [i for i in glob.glob('*.{}'.format(extension))] # creates a list of symbols.csv
     stock_symbols = [i.replace('.csv', '') for i in all_filenames] # removes .csv from end of symbols
@@ -218,7 +251,3 @@ if __name__ == '__main__':
     # plt.plot(equity_curve_df)
     # plt.show()
     # Measure the sharpe ratio
-
-
-
-
