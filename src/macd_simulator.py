@@ -1,27 +1,14 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_macd_signal, hma_crossover, hma_price_crossover, hma_zscore_signal
+from macd_signals import calc_pandas_macd_signal, calc_pandas_macd, calc_pandas_macd_signal_v2
 from typing import List
 import pandas as pd
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
-
-# Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
-
-# Just run apply using your signal function
-# use args to implement series and m values in a different script
-signal = prices.apply(hma_zscore_signal, args=[25,45], axis=0)
+signal = prices.apply(calc_pandas_macd_signal, axis=0, result_type='expand')
 signal.iloc[-1] = 0
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
-
-# import hashlib
-# this checks to see if the there is any randomness in a function.
-# print(hashlib.md5(signal.to_csv().encode()).hexdigest())
-
-# make consistent preference by making it rolling sharp.
-# preference is just used if you have too many buy signals, how it says which ones to buy 
-# preference = pd.DataFrame(0,index=prices.index, columns=prices.columns)
 
 assert signal.index.equals(preference.index)
 assert prices.index.equals(preference.index)
@@ -31,7 +18,7 @@ assert signal.columns.equals(preference.columns)
 # Run the simulator
 simulator = simulation.SimpleSimulator(
     initial_cash=100000,
-    max_active_positions=20,
+    max_active_positions=5,
     percent_slippage=0.0005,
     trade_fee=1,
 )
