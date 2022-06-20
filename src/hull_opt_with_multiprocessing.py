@@ -78,6 +78,7 @@ class GridSearchOptimizer(object):
         #[{'percent_return': -0.3434220047247627, 'spy_percent_return': 1.8325266214908038, 
         # 'cagr': -0.041248417793209535, ......... , 'final_equity': 6565.779952752373}, {'percent_return': -0.275879124922628, 
         # 'spy_percent_return': 1.8325266214908038, 'cagr': -0.03180281922600281, 'volatility': 0.15188092696177793}]
+        list_of_parameter_dicts = list(product(*param_ranges.values()))
         results = Parallel(n_jobs=8,verbose=50)(delayed(self.simulate)(params[0],params[1]) for i, params in enumerate(product(*param_ranges.values())))
         # parameters = 
         #{'hma_trend_n': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
@@ -85,7 +86,8 @@ class GridSearchOptimizer(object):
         parameters = {n: param for n, param in zip(param_names, param_ranges.values())}
         ipython_embed()
         # 
-        self.add_results(parameters, results)
+        for param_dict, result_dict in zip(list_of_parameter_dicts, list_of_result_dicts):
+            self.add_results(parameters, results)
         timer_end = default_timer()
         total_time_elapsed += timer_end - timer_start 
 
