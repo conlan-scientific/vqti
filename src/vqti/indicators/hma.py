@@ -1,15 +1,17 @@
 import pandas as pd
 import numpy as np
 from typing import List
+import unittest
 # Hull Moving Average
 # HMA = WMA(2*WMA(n/2) − WMA(n)),sqrt(n))
 # recommended m = 4, 9, 16, 25, 49, 81
 
 # fastest wma
-def calculate_numpy_matrix_wma(values: np.ndarray, m: int=16) -> np.ndarray:
+def calculate_numpy_matrix_wma(series: pd.Series, m: int=16) -> pd.Series:
     assert m >= 1, 'Period must be a positive integer'
     assert type(m) is int, 'Period must be a positive integer'
-    assert len(values) >= m, 'Values must be >= period m'
+    assert len(series) >= m, 'Values must be >= period m'
+    values = np.array(series.values)
     n = values.shape[0]
     weights = []
     denom = (m * (m + 1)) / 2
@@ -38,31 +40,33 @@ def calculate_numpy_matrix_wma(values: np.ndarray, m: int=16) -> np.ndarray:
 
     wma[front_pad: len(values)] = q.dot(weights)
 
-    return wma
+    return pd.Series(wma, index=series.index, dtype='float64', name='wma')
 
 # fastest hma
-def calculate_numpy_matrix_hma(values: np.ndarray, m: int=10) -> np.ndarray:
+def calculate_numpy_matrix_hma(values: pd.Series, m: int=10) -> pd.Series:
 	assert m >= 1, 'Period must be a positive integer'
 	assert type(m) is int, 'Period must be a positive integer'
 	assert len(values) >= m, 'Values must be >= period m'
-	return calculate_numpy_matrix_wma(
+	hma = calculate_numpy_matrix_wma(
                 (2* calculate_numpy_matrix_wma(values, int(m/2))) -\
                     (calculate_numpy_matrix_wma(values, m)), int(np.sqrt(m)))
+	return pd.Series(hma.values, index=values.index, dtype='float64', name='hma')
 
 # fastest pandas wma
 def calculate_pandas_wma(values: pd.Series, m: int=10) -> pd.Series:
 	assert m >= 1, 'period must be a positive integer'
 	assert type(m) is int, 'Period must be a positive integer'
 	assert len(values) >= m, 'Values must be >= period m'
-	return values.rolling(m).apply(lambda x: ((np.arange(m)+1)*x).sum()/ \
+	wma = values.rolling(m).apply(lambda x: ((np.arange(m)+1)*x).sum()/ \
                             (np.arange(m)+1).sum(), raw=True)
- 
+	return pd.Series(wma.values, index=values.index, dtype='float64', name='hma')
 def calculate_pandas_hma(values: pd.Series, m: int=10) -> pd.Series:
 	assert m >= 1, 'Period must be a positive integer'
 	assert type(m) is int, 'Period must be a positive integer'
 	assert len(values) >= m, 'Values must be >= period m'
-	return calculate_pandas_wma(2* calculate_pandas_wma(values, int(m/2)) - \
+	hma = calculate_pandas_wma(2* calculate_pandas_wma(values, int(m/2)) - \
                         (calculate_pandas_wma(values, m)), int(np.sqrt(m)))
+	return pd.Series(hma.values, index=values.index, dtype='float64', name='hma')
 
 def _calculate_pure_python_wma(values: List[float], m: int=10)-> List[float]:
 	assert m >= 1, 'Period must be a positive integer'
@@ -171,79 +175,74 @@ def _calculate_pandas_wma_3(values: pd.Series, m: int=10) -> pd.Series:
 	weights = np.array(weights)
 	return values.rolling(window=m).apply(lambda x: np.sum(weights*x))
 
-#############################
-######## SIGNALS ############
-#############################
+####### TESTING FUNCTIONS #######
 
-def calculate_hma_trend_signal(series: pd.Series, m: int=49) -> pd.Series:
-	hull_ma = pd.Series(calculate_numpy_matrix_hma(series.values, m))
-	trend = np.sign(hull_ma - hull_ma.shift(1))
-	signal = np.where(trend > trend.shift(1), 1, 0)
-	signal = np.where(trend < trend.shift(1), -1, signal)
-	return signal
+class TestWMA(unittest.TestCase):
+	def setUp(self):
+		self.input_data = [1,2,3,4,5,6,7,8,9,10]
+		self.truth_case_data = [np.nan, np.nan, np.nan, 3.0, 4.0, 
+                          		5.0, 6.0, 7.0, 8.0, 9.0]
 
-def calculate_wma_trend_signal(series: pd.Series, m: int=30) -> pd.Series:
-    wma = pd.Series(calculate_numpy_matrix_wma(series.values, m))
-    trend = np.sign(wma - wma.shift(1))
-    signal = np.where(trend > trend.shift(1), 1, 0)
-    signal = np.where(trend < trend.shift(1), -1, signal)
-    return signal
+	def test_pure_python_wma(self):
+		test_case = _calculate_pure_python_wma(self.input_data, m=4)
+		self.assertEqual(test_case, self.truth_case_data)
+	
+	def test_numpy_wma(self):
+		test_case = _calculate_numpy_wma(np.array(self.input_data), m=4)
+		truth_case = np.array(self.truth_case_data)
+		np.testing.assert_array_equal(test_case, truth_case)
+  
+	def test_numpy_matrix_wma(self):
+		test_case = calculate_numpy_matrix_wma(pd.Series(self.input_data), m=4)
+		test_case = np.array(test_case.values)
+		truth_case = np.array(self.truth_case_data)
+		np.testing.assert_array_equal(test_case, truth_case)
+	
+	def test_pandas_wma(self):
+		test_case = calculate_pandas_wma(pd.Series(self.input_data), m=4)
+		truth_case = pd.Series(self.truth_case_data)
+		np.testing.assert_array_equal(test_case, truth_case)
+  
+	def test_pandas_wma_2(self):
+		test_case = _calculate_pandas_wma_2(pd.Series(self.input_data), m=4)
+		truth_case = pd.Series(self.truth_case_data)
+		np.testing.assert_array_equal(test_case, truth_case)
+  
+	def test_pandas_wma_3(self):
+		test_case = _calculate_pandas_wma_3(pd.Series(self.input_data), m=4)
+		truth_case = pd.Series(self.truth_case_data)
+		np.testing.assert_array_equal(test_case, truth_case)
+  
+class TestHMA(unittest.TestCase):
+	def setUp(self):
+		self.input_data = [1,2,3,4,5,6,7,8,9,10]
+		self.truth_case_data_hma = [np.NaN, np.NaN, np.NaN, np.NaN, 
+                              		5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+  
+	def test_pure_python_hma(self):
+		test_case = np.array(_calculate_pure_python_hma(self.input_data, m=4), 
+                       			dtype=np.float64)
+		truth_case = np.array(self.truth_case_data_hma, dtype=np.float64)
+		np.testing.assert_allclose(test_case, truth_case, rtol=1e-07)
+  
+	def test_numpy_hma(self):
+		test_case = _calculate_numpy_hma(np.array(self.input_data), m=4)
+		truth_case = np.array(self.truth_case_data_hma)
+		np.testing.assert_allclose(test_case, truth_case, rtol=1e-07)
+  
+	def test_numpy_matrix_hma(self):
+		test_case = calculate_numpy_matrix_hma(pd.Series(self.input_data), m=4)
+		test_case = np.array(test_case.values)
+		truth_case = np.array(self.truth_case_data_hma)
+		np.testing.assert_allclose(test_case, truth_case, rtol=1e-07)
+  
+	def test_pandas_hma(self):
+		test_case = calculate_pandas_hma(pd.Series(self.input_data), m=4)
+		truth_case = pd.Series(self.truth_case_data_hma)
+		np.testing.assert_allclose(test_case, truth_case, rtol=1e-07)
 
-def calculate_rolling_volatility(series, m):
-    return series.rolling(m).std() * np.sqrt(252/m)
- 
-def calculate_hma_zscore(series: pd.Series, m1: int=16, 
-                         m2: int=81) -> pd.Series:
-	assert m1 < m2, "m1 must be less than m2"
-	assert m1 >= 1 and m2 >=1, 'Period must be a positive integer'
-	assert type(m1) and type(m2) is int, 'Period must be a positive integer'
-	assert len(series) >= m2, 'Values must be >= period m2'
-	hma1 = pd.Series(calculate_numpy_matrix_hma(series.values, m1), 
-                    index=series.index)
-	hma2 = pd.Series(calculate_numpy_matrix_hma(series.values, m2), 
-                    index=series.index) 
-	vol = calculate_rolling_volatility(series, m2)
-	return (hma1 - hma2) / vol 
 
-def calculate_hma_zscore_signal(series: pd.Series, m1: int=16, m2: int=81):
-    zscore = calculate_hma_zscore(series, m1, m2)
-    zscore_sign = np.sign(zscore)
-    zscore_shifted_sign = zscore_sign.shift(1, axis=0)
-    return zscore_sign * (zscore_sign != zscore_shifted_sign)
 
-def calculate_hma_macd_signal(series: pd.Series, m1: int=16, m2: int=49, 
-                              sig: int=9) -> pd.Series:
-	assert m1 < m2, "m1 must be less than m2"
-	assert sig < m1, 'signal line must be less than m1'
-	assert m1 >= 1 and m2 >=1, 'Period must be a positive integer'
-	assert type(m1) and type(m2) is int, 'Period must be a positive integer'
-	assert len(series) >= m2, 'Values must be >= period m2'
-	hma1 = pd.Series(calculate_numpy_matrix_hma(series.values, m1),
-                    index=series.index) 
-	hma2 = pd.Series(calculate_numpy_matrix_hma(series.values, m2), 
-                    index=series.index)
-	macd = hma1 - hma2
-	macd_sig = pd.Series(calculate_numpy_matrix_hma(macd.values, sig), 
-                        index=series.index)
-	hist = macd - macd_sig
-	hist_sign = np.sign(hist)
-	hist_shifted_sign = hist_sign.shift(1, axis=0)
-	return hist_sign * (hist_sign != hist_shifted_sign)
-
-def calculate_hma_price_crossover_signal(series: pd.Series, m: int=16):
-    series = np.array(series)
-    hull_ma = pd.Series(calculate_numpy_matrix_hma(series, m))
-    sign = np.where(hull_ma > series, 1, 0)
-    sign = pd.Series(np.where(hull_ma < series, -1, sign))
-    price_crossover = np.where(sign > sign.shift(1), 1, 0)
-    price_crossover = np.where(sign < sign.shift(1), -1, price_crossover)
-    return price_crossover 
-
-def calculate_hma_crossover_signal(series: pd.Series, m1: int=16, 
-                                   m2: int=81)-> pd.Series:
-    fast_hma = pd.Series(calculate_numpy_matrix_hma(series, m1))
-    slow_hma = pd.Series(calculate_numpy_matrix_hma(series, m2))
-    sign = np.sign(fast_hma - slow_hma)
-    crossover = np.where(sign > sign.shift(1), 1, 0)
-    crossover = np.where(sign < sign.shift(1), -1, crossover)
-    return crossover
+if __name__ == '__main__':
+	
+	unittest.main()

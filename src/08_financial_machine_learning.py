@@ -2,7 +2,7 @@ import pandas as pd
 from vqti.load import load_eod
 from pypm.data_io import get_all_symbols
 from vqti.indicators.cci import pandas_cci_rolling
-from aroon_oscillator import aroon_pandas
+from vqti.indicators.aroon_oscillator import aroon_pandas
 
 from sklearn import tree
 from sklearn import ensemble

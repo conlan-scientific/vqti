@@ -9,16 +9,46 @@ import glob
 from pathlib import Path
 from IPython import embed as ipython_embed
 
-from vqti.performance import (
-	calculate_cagr,
-	calculate_annualized_volatility,
-	calculate_sharpe_ratio,
-)
 
-from hullma import (
-    numpy_matrix_hma,
-    numpy_matrix_wma
-)
+def numpy_matrix_wma(values: pd.Series, m: int) -> pd.Series:
+	assert m >= 1, 'Period must be a positive integer'
+	assert type(m) is int, 'Period must be a positive integer'
+	assert len(values) >= m, 'Values must be >= period m'
+	n = values.shape[0]
+	weights = []
+	denom = (m * (m + 1)) / 2
+	for i in range(1, m + 1):
+		x = i / denom
+		weights.append(x)
+
+	weights = np.array(weights)
+	# Exit early if m greater than length of values
+	if m > n:
+		return np.array([np.nan] * n)
+    
+	# Front padding of series
+	front_pad = max(m - 1, 0)
+
+	# Initialize the output array
+	y = np.empty((n,))
+
+    # Pad with na values
+	y[:front_pad] = np.nan
+
+    # Build a matrix to multiply with weight vector
+	q = np.empty((n - front_pad, m))
+	for j in range(m):
+		q[:,j] = values[j:(j+n-m+1)]
+
+	y[front_pad: len(values)] = q.dot(weights)
+
+	return y
+
+def numpy_matrix_hma(values: np.ndarray, m: int=10) -> np.array:
+	assert m >= 1, 'Period must be a positive integer'
+	assert type(m) is int, 'Period must be a positive integer'
+	assert len(values) >= m, 'Values must be >= period m'
+	return numpy_matrix_wma((2* numpy_matrix_wma(values, int(m/2))) - (numpy_matrix_wma(values, m)), int(np.sqrt(m)))
 
 def hma_trend_signal(series: pd.Series, m: int=49) -> pd.Series:
     hull_ma = pd.Series(numpy_matrix_hma(series.values, m))

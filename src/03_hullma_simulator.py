@@ -1,5 +1,11 @@
 from pypm import metrics, signals, data_io, simulation
-from aroon_oscillator import aroon_signal_line
+from vqti.indicators.hma_signals import (
+    calculate_hma_trend_signal,
+    calculate_hma_macd_signal,
+    calculate_hma_crossover_signal,
+    calculate_hma_price_crossover_signal,
+    calculate_hma_zscore_signal
+)
 from typing import List
 import pandas as pd
 import numpy as np 
@@ -10,9 +16,18 @@ symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 
 # Just run apply using your signal function
-signal = prices.apply(aroon_signal_line, args=[100], axis=0)
+# use args to implement series and m values in a different script
+signal = prices.apply(calculate_hma_zscore_signal, args=[25,45], axis=0)
 signal.iloc[-1] = 0
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
+
+# import hashlib
+# this checks to see if the there is any randomness in a function.
+# print(hashlib.md5(signal.to_csv().encode()).hexdigest())
+
+# make consistent preference by making it rolling sharp.
+# preference is just used if you have too many buy signals, how it says which ones to buy 
+# preference = pd.DataFrame(0,index=prices.index, columns=prices.columns)
 
 assert signal.index.equals(preference.index)
 assert prices.index.equals(preference.index)

@@ -103,40 +103,42 @@ def numpy_wma(values: np.array, m: int=10) -> np.array:
 
 # @time_this
 # fastest wma
-def numpy_matrix_wma(values: np.ndarray, m: int) -> np.ndarray:
-    assert m >= 1, 'Period must be a positive integer'
-    assert type(m) is int, 'Period must be a positive integer'
-    assert len(values) >= m, 'Values must be >= period m'
+def numpy_matrix_wma(values: pd.Series, m: int) -> pd.Series:
+	assert m >= 1, 'Period must be a positive integer'
+	assert type(m) is int, 'Period must be a positive integer'
+	assert len(values) >= m, 'Values must be >= period m'
+	values_array = np.array(values.values)
+	n = values_array.shape[0]
+	weights = []
+	denom = (m * (m + 1)) / 2
+	for i in range(1, m + 1):
+		x = i / denom
+		weights.append(x)
 
-    n = values.shape[0]
-    weights = []
-    denom = (m * (m + 1)) / 2
-    for i in range(1, m + 1):
-        x = i / denom
-        weights.append(x)
-
-    weights = np.array(weights)
-    # Exit early if m greater than length of values
-    if m > n:
-        return np.array([np.nan] * n)
+	weights = np.array(weights)
+	# Exit early if m greater than length of values
+	if m > n:
+		return np.array([np.nan] * n)
     
-    # Front padding of series
-    front_pad = max(m - 1, 0)
+	# Front padding of series
+	front_pad = max(m - 1, 0)
 
-    # Initialize the output array
-    y = np.empty((n,))
+	# Initialize the output array
+	y = np.empty((n,))
 
     # Pad with na values
-    y[:front_pad] = np.nan
+	y[:front_pad] = np.nan
 
     # Build a matrix to multiply with weight vector
-    q = np.empty((n - front_pad, m))
-    for j in range(m):
-        q[:,j] = values[j:(j+n-m+1)]
+	q = np.empty((n - front_pad, m))
+	for j in range(m):
+		q[:,j] = values[j:(j+n-m+1)]
 
-    y[front_pad: len(values)] = q.dot(weights)
+	y[front_pad: len(values)] = q.dot(weights)
 
-    return y
+	return pd.Series(y, index=values.index, dtype='float64', 
+                     name='hma_zscore_signal')
+
 
 # @time_this
 def numpy_hma(values: np.ndarray, m: int=10) -> np.array:
@@ -209,7 +211,8 @@ class TestWMA(unittest.TestCase):
 		np.testing.assert_array_equal(test_case, truth_case)
   
 	def test_numpy_matrix_wma(self):
-		test_case = numpy_matrix_wma(np.array(self.input_data), m=4)
+		test_case = numpy_matrix_wma(pd.Series(self.input_data), m=4)
+		test_case = np.array(test_case.values)
 		truth_case = np.array(self.truth_case_data)
 		np.testing.assert_array_equal(test_case, truth_case)
 	
@@ -245,7 +248,8 @@ class TestHMA(unittest.TestCase):
 		np.testing.assert_allclose(test_case, truth_case, rtol=1e-07)
   
 	def test_numpy_matrix_hma(self):
-		test_case = numpy_matrix_hma(np.array(self.input_data), m=4)
+		test_case = numpy_matrix_hma(pd.Series(self.input_data), m=4)
+		test_case = np.array(test_case.values)
 		truth_case = np.array(self.truth_case_data_hma)
 		np.testing.assert_allclose(test_case, truth_case, rtol=1e-07)
   
@@ -259,22 +263,23 @@ if __name__ == '__main__':
 	df = load_eod('AWU')
 	# print(df)
 		
-	'''
-	result = pure_python_wma(df.close.tolist(), 4)
+	
+	# result = pure_python_wma(df.close.tolist(), 4)
+	# print('Done!')
+	# result = pure_python_hma(df.close.tolist(), 4)
+	# print('Done!')
+	# result = numpy_wma(df.close.to_numpy(), 4)
+	# print('Done!')
+	result = numpy_matrix_wma(df.close, 4)
+	print(result)
 	print('Done!')
-	result = pure_python_hma(df.close.tolist(), 4)
-	print('Done!')
-	result = numpy_wma(df.close.to_numpy(), 4)
-	print('Done!')
-	result = numpy_matrix_wma(df.close.to_numpy(), 4)
-	print('Done!')
-	result = numpy_hma(df.close.to_numpy(), 4)
-	print("Done!")
-	result = numpy_matrix_hma(df.close.to_numpy(), 4)
-	print("Done!")
-	result = pandas_wma(df.close, 4)
-	print("Done!")
-	result = pandas_hma(df.close, 4)
-	print("Done!")
-	'''
+	# result = numpy_hma(df.close.to_numpy(), 4)
+	# print("Done!")
+	# result = numpy_matrix_hma(df.close.to_numpy(), 4)
+	# print("Done!")
+	# result = pandas_wma(df.close, 4)
+	# print("Done!")
+	# result = pandas_hma(df.close, 4)
+	# print("Done!")
+	
 	unittest.main()
