@@ -9,11 +9,6 @@ import glob
 from pathlib import Path
 from IPython import embed as ipython_embed
 
-from vqti.performance import (
-	calculate_cagr,
-	calculate_annualized_volatility,
-	calculate_sharpe_ratio,
-)
 
 def numpy_matrix_wma(values: pd.Series, m: int) -> pd.Series:
 	assert m >= 1, 'Period must be a positive integer'
