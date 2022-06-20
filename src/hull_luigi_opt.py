@@ -3,21 +3,17 @@ from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
 from typing import List, Dict, Any
 import pandas as pd
 import itertools
+import luigi
 import time
 
-# assert pd.Index([close,high]).isin(df.columns)
-# assert columns are floats
-#instead of merge, use concat. Instead of map, use apply(lambda). 
-# assert df.index.is_unique
-# Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
-def run_simulation(m1: int, m2:int, max_active_positions: int) -> Dict[str, Any]:
+def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
-    signal = prices.apply(hma_zscore_signal, args=([m1,m2]), axis=0)
+    signal = prices.apply(hma_trend_signal, args=([hma_length]), axis=0)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -59,43 +55,47 @@ def run_simulation(m1: int, m2:int, max_active_positions: int) -> Dict[str, Any]
         'average_active_trades': portfolio_history.average_active_trades,
         'final_equity': portfolio_history.final_equity,
 
-        'm1': m1,
-        'm2': m2,
+        'hma_length': hma_length,
         'max_active_positions': max_active_positions,
     }
-# print(run_simulation(16,5))
-'''
-rows = list()
-for hma_length in [4, 9, 16, 25, 49, 81]:
-            for max_active_positions in [5, 20]:
-                #print('Simulating', hma_length, max_active_positions)
-                row = run_simulation(
-                    hma_length,
-                    max_active_positions
-                )
-                rows.append(row)
-df = pd.DataFrame(rows)
-print(df)
-'''
-start= time.time()
-#hma zscore signal best 25, 49, 20.  top 3 pct return 1.542599 1.333573 1.231270
-m1: List = [4, 9, 16, 25, 49, 81]
-m2: List = [9, 16, 25, 49, 81]
-max_active_positions: List = [10, 20, 30, 40, 50]
-parameters = list(itertools.product(m1, m2, max_active_positions))
-results = []
-for i, combo in enumerate(parameters):
-    if combo[0] < combo[1]:
-        results.append(
-            run_simulation(
-                m1=combo[0],
-                m2=combo[1],
-                max_active_positions=combo[2]
-            )
-        )
-    else:
-        pass
 
-df = pd.DataFrame(results)
-end = time.time()
-print(end - start)
+class TimeTaskMixin(object):
+    '''
+    A mixin that when added to a luigi task, will print out
+    the tasks execution time to standard out, when the task is
+    finished
+    '''
+    @luigi.Task.event_handler(luigi.Event.PROCESSING_TIME)
+    def print_execution_time(self, processing_time):
+        print('### PROCESSING TIME ###: ' + str(processing_time))
+
+class ParallelSimulation(luigi.Task, TimeTaskMixin):
+    
+    def requires(self):
+         return []
+   
+    def run(self):
+        hma_length: List = [4, 9, 16, 25, 49, 81]
+        max_active_positions: List = [10, 20, 30, 40, 50]
+        parameters = list(itertools.product(hma_length, max_active_positions))
+        results = []
+        for i, combo in enumerate(parameters):
+                results.append(
+                    run_simulation(
+                        hma_length=combo[0],
+                        max_active_positions=combo[1]
+                    )
+                )
+        df = pd.DataFrame(results)
+        df.to_csv(self.output().path, index=False)
+    
+    def output(self):
+        return luigi.LocalTarget('hull_trend_sim.csv')
+    
+if __name__ == '__main__':
+    luigi.run()
+    #  python -m luigi  --module hull_parallel_opt  ParallelSimulation --local-scheduler ### PROCESSING TIME ###: 169.2014126777649
+    # python -m luigi  --module hull_parallel_opt  ParallelSimulation --local-scheduler --workers 4
+    # workers command does not work on windows...
+    # run luigid from a background terminal command line to run the luigi task manager dashboard at http://localhost:8082
+    # luigid --background

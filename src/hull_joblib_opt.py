@@ -1,23 +1,19 @@
-from RSI_jake import relative_strength_index, rsi_signal_line_calculation
 from pypm import metrics, signals, data_io, simulation
+from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
 from typing import List, Dict, Any
 import pandas as pd
+import itertools
+import time
+from joblib import Parallel, delayed
 
-# Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
-def run_simulation(periods: int, max_active_positions: int) -> Dict[str, Any]:
+def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]:
 
-    
     # Just run apply using your signal function
-
-    #just apply the rsi calculation and see what it looks like to determine if signal line calculation is functional
-    signal = prices.apply(rsi_signal_line_calculation, args=[periods], axis=0)
-    print(signal)
-
-    #change the signal to only represent AWU, need to find out what why the program only works with lookback greater than or equal to 40
+    signal = prices.apply(hma_trend_signal, args=([hma_length]), axis=0)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -59,18 +55,23 @@ def run_simulation(periods: int, max_active_positions: int) -> Dict[str, Any]:
         'average_active_trades': portfolio_history.average_active_trades,
         'final_equity': portfolio_history.final_equity,
 
-        'periods': periods,
+        'hma_length': hma_length,
         'max_active_positions': max_active_positions,
     }
-print(run_simulation(16,5))
-
-rows = list()
-for periods in [5, 10, 14, 20, 40, 80, 100]:
-    for max_active_positions in [5, 20]:
-        print('Simulating', '...', periods, max_active_positions)
-        row = run_simulation(
-            periods,
-            max_active_positions
-        )
-        rows.append(row)
-df = pd.DataFrame(rows)
+    
+     
+def run():
+    hma_length: List = [4, 9, 16, 25, 49, 81]
+    max_active_positions: List = [10, 20, 30, 40, 50]
+    parameters = list(itertools.product(hma_length, max_active_positions))
+    results=((Parallel(n_jobs=8)(delayed(run_simulation)(combo[0], combo[1]) for i, combo in enumerate(parameters))))            
+    df = pd.DataFrame(results)
+    return df
+    
+if __name__ == '__main__':
+    start= time.time()
+    results = run()
+    print(results)
+    end= time.time()
+    print(f'Parallel took {end-start} seconds')
+    # took 34.05660676956177 seconds compared to non parallelized 168.59732389450073 seconds 

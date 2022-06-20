@@ -8,9 +8,6 @@ from typing import List
 
 #get all data somehow, not sure :(
 
-def get_all_data():
-
-
 def _calculate_return_series(self, series: pd.Series) -> pd.Series:
     """
     From Algorithmic Trading with Python

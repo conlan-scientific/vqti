@@ -39,8 +39,8 @@ def rolling_volatility(series, m):
  
 def hma_zscore(series: pd.Series, m1: int=16, m2: int=81) -> pd.Series:
     assert m1 < m2, "m1 must be less than m2"
-    hma1 = pd.Series(numpy_matrix_hma(series.values, m1), index=series.index) # / series.rolling(m1).std())
-    hma2 = pd.Series(numpy_matrix_hma(series.values, m2), index=series.index) # / series.rolling(m2).std())
+    hma1 = pd.Series(numpy_matrix_hma(series.values, m1), index=series.index)
+    hma2 = pd.Series(numpy_matrix_hma(series.values, m2), index=series.index) 
     vol = rolling_volatility(series, m2)
     return (hma1 - hma2) / vol #volatility should be on the same length as the indicator
 
@@ -93,6 +93,16 @@ def volatility(series: pd.Series, n: int=14):
     log_returns = pd.Series(np.log(series / series.shift(-1)))
     vol = log_returns.rolling(window=n).std()*np.sqrt(n)
     return vol
+
+def pandas_ema(series, m: int=5):
+    return series.ewm(span=m, adjust=False).mean()
+
+def ema_trend_signal(series: pd.Series, m: int=49) -> pd.Series:
+    ema = pd.Series(pandas_ema(series.values, m))
+    trend = np.sign(ema - ema.shift(1))
+    signal = np.where(trend > trend.shift(1), 1, 0)
+    signal = np.where(trend < trend.shift(1), -1, signal)
+    return signal
 
 
 """

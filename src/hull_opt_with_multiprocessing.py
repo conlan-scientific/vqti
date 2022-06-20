@@ -8,11 +8,12 @@ from itertools import product
 from timeit import default_timer
 from typing import Dict, Tuple, List, Callable, Iterable, Any, NewType, Mapping
 from hullma_signal import hma_trend_signal
-
+from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 from matplotlib import cm 
 from mpl_toolkits.mplot3d import Axes3D 
 from IPython import embed as ipython_embed
+
 # Performance data and parameter inputs are dictionaries
 Parameters = NewType('Parameters', Dict[str, float])
 Performance = simulation.PortfolioHistory.PerformancePayload # Dict[str, float]
@@ -61,8 +62,7 @@ class GridSearchOptimizer(object):
 
     def optimize(self, **optimization_ranges: SimKwargs):
 
-        assert optimization_ranges, 'Must provide non-empty parameters.'
-
+        assert optimization_ranges, 'Must provide non-empty parameters.'    
         # Convert all iterables to lists
         param_ranges = {k: list(v) for k, v in optimization_ranges.items()}
         self.param_names = param_names = list(param_ranges.keys())
@@ -70,44 +70,24 @@ class GridSearchOptimizer(object):
         # Count total simulation
         n = total_simulations = np.prod([len(r) for r in param_ranges.values()])
 
-        total_time_elapsed = 0
-
+        total_time_elapsed = 0   
         print(f'Starting simulation ...')
+        timer_start = default_timer()
         print(f'Simulating 1 / {n} ...', end='\r')
-        for i, params in enumerate(product(*param_ranges.values())): # THIS IS WHAT YOU PARALLELIZE, equivalent to itertools/nested for loop
-            if i > 0:
-                _avg = avg_time = total_time_elapsed / i
-                _rem = remaining_time = (n - (i + 1)) * avg_time
-                s =  f'Simulating {i+1} / {n} ... '
-                s += f'{_rem:.0f}s remaining ({_avg:.1f}s avg)'
-                s += ' '*8
-                print(s, end='\r')
-
-            timer_start = default_timer()
-
-            parameters = {n: param for n, param in zip(param_names, params)}
-            results = self.simulate(**parameters)
-            ipython_embed()
-            # parameters = {'hma_trend_n': 10, 'sharpe_n': 10}
-            # results = {'percent_return': -0.3434220047247627,
-            #             'spy_percent_return': 1.8325266214908038,
-            #             'cagr': -0.041248417793209535,
-            #             'volatility': 0.15405776518309583,
-            #             'sharpe_ratio': -0.2679872033778951,
-            #             'spy_cagr': 0.10990444806875588,
-            #             'excess_cagr': -0.1511528658619654,
-            #             'jensens_alpha': -0.0004651895787313886,
-            #             'dollar_max_drawdown': 5096.300180659133,
-            #             'percent_max_drawdown': 0.4492356824326992,
-            #             'log_max_drawdown_ratio': -1.0171620847585157,
-            #             'number_of_trades': 3995,
-            #             'average_active_trades': 4.796937953263497,
-            #             'final_cash': 6565.779952752373,
-            #             'final_equity': 6565.779952752373}
-            self.add_results(parameters, results)
-
-            timer_end = default_timer()
-            total_time_elapsed += timer_end - timer_start 
+        # results = returns a list of dictionaries
+        #[{'percent_return': -0.3434220047247627, 'spy_percent_return': 1.8325266214908038, 
+        # 'cagr': -0.041248417793209535, ......... , 'final_equity': 6565.779952752373}, {'percent_return': -0.275879124922628, 
+        # 'spy_percent_return': 1.8325266214908038, 'cagr': -0.03180281922600281, 'volatility': 0.15188092696177793}]
+        results = Parallel(n_jobs=8,verbose=50)(delayed(self.simulate)(params[0],params[1]) for i, params in enumerate(product(*param_ranges.values())))
+        # parameters = 
+        #{'hma_trend_n': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+        #    'sharpe_n': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+        parameters = {n: param for n, param in zip(param_names, param_ranges.values())}
+        ipython_embed()
+        # 
+        self.add_results(parameters, results)
+        timer_end = default_timer()
+        total_time_elapsed += timer_end - timer_start 
 
         print(f'Simulated {total_simulations} / {total_simulations} ...')
         print(f'Elapsed time: {total_time_elapsed:.0f}s')

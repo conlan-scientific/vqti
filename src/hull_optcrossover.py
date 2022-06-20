@@ -85,11 +85,11 @@ def run_hma_crossover_simulation():
         else:
             pass
 
-    df = pd.DataFrame(results)
+    df = pd.DataFrame(results, dtype='float64', name='hma_crossover_simulation' )
     return df
 
-run_hma_crossover_simulation
-
+df = run_hma_crossover_simulation()
+print(df)
 end = time.time()
 print(end - start)
 
