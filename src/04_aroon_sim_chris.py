@@ -1,9 +1,7 @@
-from pypm import metrics, signals, data_io, simulation
-from aroon_oscillator import aroon_signal_line
+from pypm import metrics, data_io, simulation
+from vqti.indicators.aroon_oscillator import aroon_signal_line
 from typing import List
 import pandas as pd
-import numpy as np 
-import matplotlib.pyplot as plt
 
 # Load in data
 symbols: List[str] = data_io.get_all_symbols()
