@@ -7,7 +7,7 @@ from collections import defaultdict, OrderedDict
 from itertools import product
 from timeit import default_timer
 from typing import Dict, Tuple, List, Callable, Iterable, Any, NewType, Mapping
-from hullma_signal import hma_trend_signal
+from vqti.indicators.hma_signals import calculate_hma_trend_signal
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 from matplotlib import cm 
@@ -84,7 +84,7 @@ class GridSearchOptimizer(object):
         #    'sharpe_n': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
         parameters = {n: param for n, param in zip(param_names, param_ranges.values())}
         ipython_embed()
-        # 
+        #for i, params in 
         self.add_results(parameters, results)
         timer_end = default_timer()
         total_time_elapsed += timer_end - timer_start 
@@ -239,7 +239,7 @@ def bind_simulator(**sim_kwargs) -> Callable:
     symbols: List[str] = data_io.get_all_symbols()
     prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 
-    _hma_trend_signal: Callable = hma_trend_signal
+    _hma_trend_signal: Callable = calculate_hma_trend_signal
     _sharpe: Callable = metrics.calculate_rolling_sharpe_ratio
 
     def _simulate(hma_trend_n: int, sharpe_n: int) -> Performance:

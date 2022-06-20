@@ -1,5 +1,5 @@
 import pandas as pd
-from hullma import numpy_matrix_hma
+from  vqti.indicators.hma import calculate_numpy_matrix_hma
 from vqti.load import load_eod
 from pypm.data_io import get_all_symbols
 from vqti.indicators.hma import calculate_numpy_matrix_hma
@@ -24,10 +24,10 @@ for symbol in symbols[:3]:
 	_y = pd.Series(_y, index=t0, name='y')
 
 	_X = pd.DataFrame({
-		'hma_trend_10': numpy_matrix_hma(df.close, 16),
-		'hma_trend_10': numpy_matrix_hma(df.close, 25),
-		'hma_trend_10': numpy_matrix_hma(df.close, 49),
-		'hma_trend_10': numpy_matrix_hma(df.close, 81),
+		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 16),
+		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 25),
+		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 49),
+		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 81),
 	}, index=df.index)
 	_X = _X.loc[t0]
 	# _df = pd.concat([_X, _y.to_frame()])
