@@ -1,19 +1,16 @@
+from setuptools import setup
 from vqti.load import EOD_DIR, load_eod
 from vqti.profile import time_this
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, NewType
 import os
 import glob
 from pathlib import Path
 from IPython import embed as ipython_embed
+import unittest
 
-from vqti.performance import (
-	calculate_cagr,
-	calculate_annualized_volatility,
-	calculate_sharpe_ratio,
-)
 
 def numpy_matrix_wma(values: pd.Series, m: int) -> pd.Series:
 	assert m >= 1, 'Period must be a positive integer'
@@ -147,30 +144,114 @@ Standardization ideas (also signal line ideas)
 + Crossover of an HMA and the price
 + Difference between two HMAs divided by volatility (z-score units) (similar to MACD)
 """
+class TestSignals(unittest.TestCase, pd.Series):
+    def setUp(self, series: pd.Series):
+        self.series = series
+        return
+     
+    def test_hma_trend_signal(self):
+        ## generate the signals 
+        signal = hma_trend_signal(self.series, 49)
+        ## find the indices where signals = 1 or -1
+        signal_index = signal.loc[signal!=0].index
+        truth_case = signal_index
+        ## find the trends from the indicator
+        hull_ma = numpy_matrix_hma(self.series, 49)
+        trend = np.sign(hull_ma - hull_ma.shift(1))
+        trend = trend.fillna(0)
+        ## find the indices where signals = 1 or -1
+        trend_index = trend.loc[trend!=trend.shift(1)].index
+        trend_index = trend_index.delete([0, 1])
+        ##assert the two indices are equal
+        np.testing.assert_array_equal(trend_index, truth_case)
     
+    def test_wma_trend_signal(self, series: pd.Series):
+        ## generate the signals 
+        signal = wma_trend_signal(self.series, 49)
+        ## find the indices where signals = 1 or -1
+        signal_index = signal.loc[signal!=0].index
+        truth_case = signal_index
+        ## find the trends from the indicator
+        hull_ma = numpy_matrix_wma(self.series, 49)
+        trend = np.sign(hull_ma - hull_ma.shift(1))
+        trend = trend.fillna(0)
+        ## find the indices where signals = 1 or -1
+        trend_index = trend.loc[trend!=trend.shift(1)].index
+        trend_index = trend_index.delete([0, 1])
+        ##assert the two indices are equal
+        np.testing.assert_array_equal(trend_index, truth_case)
+    
+    def test_hma_zscore_signal(self, series: pd.Series):
+        ## generate the signals 
+        signal = hma_zscore_signal(self.series, 16, 81)
+        ## find the indices where signals = 1 or -1
+        signal_index = signal.loc[signal!=0].index
+        truth_case = signal_index
+        ## find the trends from the indicator
+        hull_ma = hma_zscore_signal(self.series, 16, 81)
+        trend = np.sign(hull_ma - hull_ma.shift(1))
+        trend = trend.fillna(0)
+        ## find the indices where signals = 1 or -1
+        trend_index = trend.loc[trend!=trend.shift(1)].index
+        trend_index = trend_index.delete([0, 1])
+        ##assert the two indices are equal
+        np.testing.assert_array_equal(trend_index, truth_case)
+    
+    def test_hma_macd_signal(self, series: pd.Series):
+        ## generate the signals 
+        signal = hma_macd_signal(self.series, 16, 49, 9)
+        ## find the indices where signals = 1 or -1
+        signal_index = signal.loc[signal!=0].index
+        truth_case = signal_index
+        ## find the trends from the indicator
+        hull_ma = hma_macd_signal(self.series, 16, 49, 9)
+        trend = np.sign(hull_ma - hull_ma.shift(1))
+        trend = trend.fillna(0)
+        ## find the indices where signals = 1 or -1
+        trend_index = trend.loc[trend!=trend.shift(1)].index
+        trend_index = trend_index.delete([0, 1])
+        ##assert the two indices are equal
+        np.testing.assert_array_equal(trend_index, truth_case)
+        
+    def test_hma_price_crossover_signal(self, series: pd.Series):
+        ## generate the signals 
+        signal = hma_price_crossover(self.series, 16)
+        ## find the indices where signals = 1 or -1
+        signal_index = signal.loc[signal!=0].index
+        truth_case = signal_index
+        ## find the trends from the indicator
+        hull_ma = hma_price_crossover(self.series, 16)
+        trend = np.sign(hull_ma - hull_ma.shift(1))
+        trend = trend.fillna(0)
+        ## find the indices where signals = 1 or -1
+        trend_index = trend.loc[trend!=trend.shift(1)].index
+        trend_index = trend_index.delete([0, 1])
+        ##assert the two indices are equal
+        np.testing.assert_array_equal(trend_index, truth_case)
+
+    def test_hma_crossover_signal(self, series: pd.Series):
+        ## generate the signals 
+        signal = hma_crossover(self.series, 16, 81)
+        ## find the indices where signals = 1 or -1
+        signal_index = signal.loc[signal!=0].index
+        truth_case = signal_index
+        ## find the trends from the indicator
+        hull_ma = hma_crossover(self.series, 16, 81)
+        trend = np.sign(hull_ma - hull_ma.shift(1))
+        trend = trend.fillna(0)
+        ## find the indices where signals = 1 or -1
+        trend_index = trend.loc[trend!=trend.shift(1)].index
+        trend_index = trend_index.delete([0, 1])
+        ##assert the two indices are equal
+        np.testing.assert_array_equal(trend_index, truth_case)
+  
+	
+  
+
     
 if __name__ == '__main__':
 
     df = load_eod('AWU')
-    '''
-    df['pricecross'] = (hma_price_crossover(df.close, 4))
-    df['vol'] = volatility(df.close, 14)
-    df['fast'] = numpy_matrix_hma(df.close, 4)
-    df['slow'] = numpy_matrix_hma(df.close, 16)
-    df['crossover'] = hma_crossover(df.close,4,16)
-    df['atr']= atr(df,14)
-    df['zscore'] = hma_zscore(df.close,4,16)
-    df['zsore_sig'] = hma_zscore_signal(df.close,4,16)
-    '''
-    df['macd_sig'] = hma_macd_signal(df.close, 16, 49, 9)
-    print(df.iloc[:100])
-    # plt.grid(True, alpha = 0.3)
-    # plt.plot(df.iloc[-252:]['close'], label='close')
-    # plt.plot(df.iloc[-252:]['hull_ma'], label='hma')
-    # plt.plot(df.iloc[-252:]['weighted_ma'], label='wma')
-    # plt.plot(df.iloc[-252:]['signal'] * 100, label='signal')
-    # plt.legend(loc=2)
-    # plt.show()
     
     # unit test for hma_trend_signal
     ## generate the signals 
@@ -192,97 +273,5 @@ if __name__ == '__main__':
     ##assert the two indices are equal
     assert trend_index.equals(signal_index), "Test Failed"
     assert np.array_equal(trend_index, signal_index), "Test Failed"
-    
-    # eod_data_dir: Path = Path(__file__).parent.parent / "data" / "eod"
-    os.chdir('data\eod') #FileNotFoundError: [Errno 2] No such file or directory: 'data\\eod'
-    extension = 'csv'
-    all_filenames = [i for i in glob.glob('*.{}'.format(extension))] # creates a list of symbols.csv
-    stock_symbols = [i.replace('.csv', '') for i in all_filenames] # removes .csv from end of symbols
-    path = EOD_DIR 
-    all_files = glob.glob(path + '/*.csv') # creates a list of file paths to each csv file in eod directory
-    file_dict = dict(zip(stock_symbols, all_files)) # creates a dictionary of 'stock symbol' : 'file path'
-    
-    # from algorithmic trading repository
-    def combine_columns(filepaths_by_symbol: Dict[str, str]) -> pd.DataFrame:
-
-        data_frames = [
-        pd.read_csv(
-            filepath, 
-            index_col='date', 
-            usecols=['date', 'close'], 
-            parse_dates=['date'],
-            dtype='float64'
-        ).rename(
-            columns={
-                'date': 'date', 
-                'close': symbol,
-            }
-        ) for symbol, filepath in filepaths_by_symbol.items()
-        ]
-        return pd.concat(data_frames, sort=True, axis=1)    
-
-    prices_df = combine_columns(file_dict)
-    print(prices_df)
-    
-    #calculate the signals
-    def calculate_signal_df(dataframe: pd.DataFrame, m: int=16) -> pd.DataFrame:
-        return dataframe.apply(lambda x: hma_trend_signal(x, m), axis=0)
-    
-    signal_df = calculate_signal_df(prices_df, 16)
-    print(signal_df)
-    assert prices_df.index.equals(signal_df.index)
-    
-    
-    max_assets = 5
-    dt_index = prices_df.index
-    starting_cash = int(100000)
-    portfolio: List[str] = list()
-    portfolio_value = 0
-    cash = starting_cash
-    equity_curve = {}
-    stocks_im_holding = {}
-    # Pretend you are walking through time trading over the course of ten years
-    for date in signal_df.index:
-        signals = signal_df.loc[date] 
-        stocks_im_going_to_buy: List[str] = signals[signals == 1].index.tolist()
-        stocks_im_going_to_sell: List[str] = signals[signals == -1].index.tolist()
-        
-        # Mess with your cash and portfolio to sell stocks
-        if not stocks_im_holding:
-            pass
-        else:
-            for stock in stocks_im_going_to_sell:
-                if stock in stocks_im_holding:
-                    shares_sold = prices_df.loc[date][f'{stock}'] * stocks_im_holding.get(stock)
-                    cash += shares_sold
-                    portfolio_value -= shares_sold
-                    stocks_im_holding.pop(stock)
-                else:
-                    pass
-
-        if (len(stocks_im_holding) < max_assets) and (cash > 0):
-            cash_to_spend = cash / (max_assets - len(stocks_im_holding))
-            for stock in stocks_im_going_to_buy:
-                if (len(stocks_im_holding) < max_assets) and (cash > 0):
-                    # This is the "compound your gains and losses" approach to cash management
-                    # Also called the "fixed number of slots" approach
-                    shares_bought = cash_to_spend / prices_df.loc[date][f'{stock}']
-                    cash -= shares_bought * prices_df.loc[date][f'{stock}']
-                    portfolio_value += shares_bought * prices_df.loc[date][f'{stock}']
-                    portfolio.append(stock)
-                    stocks_im_holding[f'{stock}'] =  shares_bought
-        if date == signal_df.index[-1]:
-            for stock in stocks_im_holding: 
-                shares_sold = prices_df.loc[date][f'{stock}'] * stocks_im_holding.get(stock)
-                cash += shares_sold
-                portfolio_value -= shares_sold
-    
-        equity_curve[f'{date}'] = cash + portfolio_value
-    
-    equity_curve_df = pd.Series(equity_curve, name = 'total_equity')
-    equity_curve_df.index.name = 'Date'
-    # Plot the equity curve
-    print(equity_curve_df)
-    # plt.plot(equity_curve_df)
-    # plt.show()
-    # Measure the sharpe ratio
+    TestSignals(df.close)
+    unittest.main()
