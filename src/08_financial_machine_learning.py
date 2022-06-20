@@ -1,9 +1,11 @@
-
 import pandas as pd
 from vqti.load import load_eod
 from pypm.data_io import get_all_symbols
 from vqti.indicators.cci import pandas_cci_rolling
 from aroon_oscillator import aroon_pandas
+
+from sklearn import tree
+from sklearn import ensemble
 
 symbols = get_all_symbols() # ['AWU', 'BGH', ...]
 
@@ -47,8 +49,6 @@ training_data = training_data.dropna(how='any', axis=0)
 training_data = training_data.dropna(how='all', axis=1)
 
 
-from sklearn import tree
-from sklearn import ensemble
 classifier = tree.DecisionTreeClassifier()
 classifier = ensemble.RandomForestClassifier(
 	max_depth=5,
