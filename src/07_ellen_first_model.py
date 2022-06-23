@@ -5,6 +5,11 @@ Created on Tue Jun 14 18:59:45 2022
 
 This script generates a first model 
 
+To do: 
+    * finsih this first model (e.g. get the engineering in place)
+    * apply ML principles 
+    * check out idea - multidimensional item response theory 
+    
 @author: ellenyu
 """
 from vqti.load import load_eod
@@ -56,8 +61,8 @@ for symbol in symbols:
 	pieces_of_X.append(piece_of_X)
 	pieces_of_y.append(piece_of_y)
 
-X = pd.concat(pieces_of_X, axis=0)
-y = pd.concat(pieces_of_y, axis=0)
+X = pd.concat(pieces_of_X, axis=0) # Should be stacked underneath each other right? 
+y = pd.concat(pieces_of_y, axis=0) # Should be stacked underneath each other right? 
 
 # Chris's code for machine learning 
 # from sklearn import svm
