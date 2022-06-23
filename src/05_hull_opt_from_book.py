@@ -7,7 +7,7 @@ from collections import defaultdict, OrderedDict
 from itertools import product
 from timeit import default_timer
 from typing import Dict, Tuple, List, Callable, Iterable, Any, NewType, Mapping
-from hullma_signal import hma_trend_signal
+from vqti.indicators.hma_signals import calculate_hma_trend_signal
 
 import matplotlib.pyplot as plt
 from matplotlib import cm 
@@ -259,7 +259,7 @@ def bind_simulator(**sim_kwargs) -> Callable:
     symbols: List[str] = data_io.get_all_symbols()
     prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 
-    _hma_trend_signal: Callable = hma_trend_signal
+    _hma_trend_signal: Callable = calculate_hma_trend_signal
     _sharpe: Callable = metrics.calculate_rolling_sharpe_ratio
 
     def _simulate(hma_trend_n: int, sharpe_n: int) -> Performance:

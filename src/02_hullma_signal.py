@@ -271,7 +271,7 @@ if __name__ == '__main__':
                 shares_sold = prices_df.loc[date][f'{stock}'] * stocks_im_holding.get(stock)
                 cash += shares_sold
                 portfolio_value -= shares_sold
-    
+        
         equity_curve[f'{date}'] = cash + portfolio_value
     
     equity_curve_df = pd.Series(equity_curve, name = 'total_equity')

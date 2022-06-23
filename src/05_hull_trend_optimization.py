@@ -1,5 +1,9 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
+from vqti.indicators.hma_signals import(
+    calculate_hma_trend_signal, 
+    calculate_hma_zscore_signal, 
+    calculate_hma_macd_signal
+)
 from typing import List, Dict, Any
 import pandas as pd
 import itertools
@@ -14,10 +18,10 @@ symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
-def run_hma_macd_simulation(m1: int, m2:int, sig: int, max_active_positions: int) -> Dict[str, Any]:
+def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
-    signal = prices.apply(hma_macd_signal, args=([m1,m2]), axis=0)
+    signal = prices.apply(calculate_hma_trend_signal, args=([hma_length]), axis=0)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -59,38 +63,37 @@ def run_hma_macd_simulation(m1: int, m2:int, sig: int, max_active_positions: int
         'average_active_trades': portfolio_history.average_active_trades,
         'final_equity': portfolio_history.final_equity,
 
-        'm1': m1,
-        'm2': m2,
-        'sig': sig,
+        'hma_length': hma_length,
         'max_active_positions': max_active_positions,
     }
-
-
+# print(run_simulation(16,5))
+'''
+rows = list()
+for hma_length in [4, 9, 16, 25, 49, 81]:
+            for max_active_positions in [5, 20]:
+                #print('Simulating', hma_length, max_active_positions)
+                row = run_simulation(
+                    hma_length,
+                    max_active_positions
+                )
+                rows.append(row)
+df = pd.DataFrame(rows)
+print(df)
+'''
 start= time.time()
-#hma macd signal. Best 49, 81, 4-16, 10. best pct 1.067228, 0.85, 
-m1: List = [16, 25, 49, 81]
-m2: List = [25, 49, 81]
-sig: List = [4, 9, 16]
+#hma trend signal best is 49 and 81 with 10-20 positions. top 3 pct return  0.910905 - 0.88
+hma_length: List = [4, 9, 16, 25, 49, 81]
 max_active_positions: List = [10, 20, 30, 40, 50]
-parameters = list(itertools.product(m1, m2, sig, max_active_positions))
+parameters = list(itertools.product(hma_length, max_active_positions))
 results = []
 for i, combo in enumerate(parameters):
-    if combo[0] < combo[1]:
-        if combo[2] < combo[0]:
-            results.append( 
-                run_hma_macd_simulation( 
-                    m1=combo[0], 
-                    m2=combo[1], 
-                    sig=combo[2], 
-                    max_active_positions=combo[3]
-                )
+        results.append(
+            run_simulation(
+                hma_length=combo[0],
+                max_active_positions=combo[1]
             )
-        else:
-            pass    
-    else:
-        pass
-
+        )
 df = pd.DataFrame(results)
 print(df)
-end = time.time()
+end= time.time()
 print(end - start)

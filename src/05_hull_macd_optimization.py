@@ -1,19 +1,23 @@
 from pypm import metrics, signals, data_io, simulation
-from hullma_signal import hma_trend_signal, hma_zscore_signal, hma_macd_signal
+from vqti.indicators.hma_signals import calculate_hma_macd_signal
 from typing import List, Dict, Any
 import pandas as pd
 import itertools
 import time
-from joblib import Parallel, delayed
 
+# assert pd.Index([close,high]).isin(df.columns)
+# assert columns are floats
+#instead of merge, use concat. Instead of map, use apply(lambda). 
+# assert df.index.is_unique
+# Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
 preference = prices.apply(metrics.calculate_rolling_sharpe_ratio, axis=0)
 
-def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]:
+def run_hma_macd_simulation(m1: int, m2:int, sig: int, max_active_positions: int) -> Dict[str, Any]:
 
     # Just run apply using your signal function
-    signal = prices.apply(hma_trend_signal, args=([hma_length]), axis=0)
+    signal = prices.apply(calculate_hma_macd_signal, args=([m1,m2]), axis=0)
 
     # Do nothing on the last day
     signal.iloc[-1] = 0
@@ -55,23 +59,38 @@ def run_simulation(hma_length: int, max_active_positions: int) -> Dict[str, Any]
         'average_active_trades': portfolio_history.average_active_trades,
         'final_equity': portfolio_history.final_equity,
 
-        'hma_length': hma_length,
+        'm1': m1,
+        'm2': m2,
+        'sig': sig,
         'max_active_positions': max_active_positions,
     }
-    
-     
-def run():
-    hma_length: List = [4, 9, 16, 25, 49, 81]
-    max_active_positions: List = [10, 20, 30, 40, 50]
-    parameters = list(itertools.product(hma_length, max_active_positions))
-    results=((Parallel(n_jobs=8)(delayed(run_simulation)(combo[0], combo[1]) for i, combo in enumerate(parameters))))            
-    df = pd.DataFrame(results)
-    return df
-    
-if __name__ == '__main__':
-    start= time.time()
-    results = run()
-    print(results)
-    end= time.time()
-    print(f'Parallel took {end-start} seconds')
-    # took 34.05660676956177 seconds compared to non parallelized 168.59732389450073 seconds 
+
+
+start= time.time()
+#hma macd signal. Best 49, 81, 4-16, 10. best pct 1.067228, 0.85, 
+m1: List = [16, 25, 49, 81]
+m2: List = [25, 49, 81]
+sig: List = [4, 9, 16]
+max_active_positions: List = [10, 20, 30, 40, 50]
+parameters = list(itertools.product(m1, m2, sig, max_active_positions))
+results = []
+for i, combo in enumerate(parameters):
+    if combo[0] < combo[1]:
+        if combo[2] < combo[0]:
+            results.append( 
+                run_hma_macd_simulation( 
+                    m1=combo[0], 
+                    m2=combo[1], 
+                    sig=combo[2], 
+                    max_active_positions=combo[3]
+                )
+            )
+        else:
+            pass    
+    else:
+        pass
+
+df = pd.DataFrame(results)
+print(df)
+end = time.time()
+print(end - start)

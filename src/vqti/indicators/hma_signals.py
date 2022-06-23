@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from typing import List, Dict
-from hma import calculate_numpy_matrix_hma, calculate_numpy_matrix_wma
+from vqti.indicators.hma import calculate_numpy_matrix_hma, calculate_numpy_matrix_wma
 # from vqti.load import load_eod #why cant I get this to work
 
 def calculate_hma_trend_signal(series: pd.Series, m: int=49) -> pd.Series:
@@ -95,7 +95,7 @@ def calculate_hma_crossover_signal(series: pd.Series, m1: int=16,
     
 
 if __name__ == '__main__':
-     
+    ''' 
     df = load_eod('AWU')
     
     # unit test for hma_trend_signal
@@ -118,4 +118,4 @@ if __name__ == '__main__':
     ##assert the two indices are equal
     assert trend_index.equals(signal_index), "Test Failed"
     assert np.array_equal(trend_index, signal_index), "Test Failed"
-    
+    '''

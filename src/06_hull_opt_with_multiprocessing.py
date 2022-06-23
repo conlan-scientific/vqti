@@ -74,18 +74,11 @@ class GridSearchOptimizer(object):
         print(f'Starting simulation ...')
         timer_start = default_timer()
         print(f'Simulating 1 / {n} ...', end='\r')
-        # results = returns a list of dictionaries
-        #[{'percent_return': -0.3434220047247627, 'spy_percent_return': 1.8325266214908038, 
-        # 'cagr': -0.041248417793209535, ......... , 'final_equity': 6565.779952752373}, {'percent_return': -0.275879124922628, 
-        # 'spy_percent_return': 1.8325266214908038, 'cagr': -0.03180281922600281, 'volatility': 0.15188092696177793}]
-        results = Parallel(n_jobs=8,verbose=50)(delayed(self.simulate)(params[0],params[1]) for i, params in enumerate(product(*param_ranges.values())))
-        # parameters = 
-        #{'hma_trend_n': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-        #    'sharpe_n': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
-        parameters = {n: param for n, param in zip(param_names, param_ranges.values())}
-        ipython_embed()
-        #for i, params in 
-        self.add_results(parameters, results)
+        list_of_parameter_dicts = [dict(zip(param_ranges,i)) for i in product(*param_ranges.values())]
+        results = Parallel(n_jobs=8,verbose=50)(delayed(self.simulate)(params[0],params[1]) 
+                                                for i, params in enumerate(product(*param_ranges.values())))
+        for parameters, results in zip(list_of_parameter_dicts, results):
+            self.add_results(parameters, results)
         timer_end = default_timer()
         total_time_elapsed += timer_end - timer_start 
 
@@ -271,3 +264,4 @@ if __name__ == '__main__':
     optimizer.plot('hma_trend_n', 'sharpe_n', 'excess_cagr')
 
 # Non parallelized took 161 seconds
+# parallelized took 33 seconds
