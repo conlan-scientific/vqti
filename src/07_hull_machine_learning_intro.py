@@ -7,7 +7,7 @@ from vqti.indicators.hma import calculate_numpy_matrix_hma
 symbols = get_all_symbols() # ['AWU', 'BGH', ...]
 
 _dfs = list()
-for symbol in symbols[:3]:
+for symbol in symbols[:10]:
 	print('Preparing training data for', symbol, '...')
 	df = load_eod(symbol)
 
@@ -24,10 +24,10 @@ for symbol in symbols[:3]:
 	_y = pd.Series(_y, index=t0, name='y')
 
 	_X = pd.DataFrame({
-		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 16),
-		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 25),
-		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 49),
-		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 81),
+		'hma_trend_16': calculate_numpy_matrix_hma(df.close, 16),
+		'hma_trend_25': calculate_numpy_matrix_hma(df.close, 25),
+		'hma_trend_49': calculate_numpy_matrix_hma(df.close, 49),
+		'hma_trend_81': calculate_numpy_matrix_hma(df.close, 81),
 	}, index=df.index)
 	_X = _X.loc[t0]
 	# _df = pd.concat([_X, _y.to_frame()])

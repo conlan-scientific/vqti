@@ -4,7 +4,8 @@ from vqti.indicators.hma_signals import (
     calculate_hma_macd_signal,
     calculate_hma_crossover_signal,
     calculate_hma_price_crossover_signal,
-    calculate_hma_zscore_signal
+    calculate_hma_zscore_signal,
+    calculate_hma_zscore
 )
 from typing import List
 import pandas as pd
@@ -14,6 +15,11 @@ import matplotlib.pyplot as plt
 # Load in data
 symbols: List[str] = data_io.get_all_symbols()
 prices: pd.DataFrame = data_io.load_eod_matrix(symbols)
+
+#show the distribution of the zscore. ~ -0.7 - 0.7
+zscore_hist = prices.apply(calculate_hma_zscore, args=[25,45], axis=0)
+plt.hist(zscore_hist)
+plt.show()
 
 # Just run apply using your signal function
 # use args to implement series and m values in a different script
