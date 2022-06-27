@@ -1,4 +1,4 @@
-from RSI_jake import relative_strength_index, rsi_signal_line_calculation
+from vqti.indicators.RSI import relative_strength_index, rsi_signal_line_calculation
 from pypm import metrics, signals, data_io, simulation
 from typing import List, Dict, Any
 import pandas as pd
