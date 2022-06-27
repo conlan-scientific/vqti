@@ -5,9 +5,6 @@ import pandas as pd
 import numpy as np
 from typing import List 
 
-# NOTE: I got it to compile by changing "list" type hints to "List"
-# "List" is the type hint and "list" is the list constructor.
-
 
 def relative_strength_index(close: List[float], n: int = 14) -> List[float]:
     delta = close.diff()

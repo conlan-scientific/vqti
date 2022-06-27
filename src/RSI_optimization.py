@@ -15,7 +15,6 @@ def run_simulation(periods: int, max_active_positions: int) -> Dict[str, Any]:
 
     #just apply the rsi calculation and see what it looks like to determine if signal line calculation is functional
     signal = prices.apply(rsi_signal_line_calculation, args=[periods], axis=0)
-    print(signal)
 
     #change the signal to only represent AWU, need to find out what why the program only works with lookback greater than or equal to 40
 
