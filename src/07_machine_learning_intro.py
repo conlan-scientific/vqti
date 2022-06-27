@@ -45,12 +45,15 @@ symbols = [...]
 for symbol in symbols:
 	df = load_eod(symbol)
 
+	# t0 are the events
 	# Trade the stock once every 10 trading days
 	t0: pd.Index = df.index[::10]
 
+	# t1 are trade ends
 	# Exit after 8 calendar days
 	t1 = t0 + pd.Timedelta(days=8)
 
+	# The label, y
 	# A +1 if the stock goes up and a 0 if it goes down
 	# This has length equal to t0 and t1
 	piece_of_y = (df.close[t1] > df.close[t0]).astype('int64')
