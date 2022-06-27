@@ -1,18 +1,16 @@
 import pandas as pd
 from vqti.load import load_eod
 from pypm.data_io import get_all_symbols
-from vqti.indicators.cci import pandas_cci_rolling
-from vqti.indicators.aroon_oscillator import aroon_pandas
-
+from vqti.indicators.hma import calculate_numpy_matrix_hma
+from vqti.indicators.hma_signals import calculate_hma_zscore
 from sklearn import tree
 from sklearn import ensemble
-from vqti.indicators.bollinger import calculate_percent_b
 import numpy as np
 
 symbols = get_all_symbols() # ['AWU', 'BGH', ...]
 
 _dfs = list()
-for symbol in symbols:
+for symbol in symbols[:5]:
 	print('Preparing training data for', symbol, '...')
 	df = load_eod(symbol)
 
@@ -43,21 +41,13 @@ for symbol in symbols:
 
 
 	_X = pd.DataFrame({
-		# 'cci__10': pandas_cci_rolling(df.close, window=10),
-		# 'cci__20': pandas_cci_rolling(df.close, window=20),
-		# 'cci__40': pandas_cci_rolling(df.close, window=40),
-		# 'cci__80': pandas_cci_rolling(df.close, window=80),
+		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 16),
+		'hma_trend_25': calculate_numpy_matrix_hma(df.close, 25),
+		'hma_trend_49': calculate_numpy_matrix_hma(df.close, 49),
+		'hma_trend_81': calculate_numpy_matrix_hma(df.close, 81),
 
-		# 'aroon__10': aroon_pandas(df.high, df.low, p=10),
-		# 'aroon__20': aroon_pandas(df.high, df.low, p=20),
-		# 'aroon__40': aroon_pandas(df.high, df.low, p=40),
-		# 'aroon__80': aroon_pandas(df.high, df.low, p=80),
-
-		'bollinger_percent_b__10': calculate_percent_b(df.close, n=10),
-		'bollinger_percent_b__20': calculate_percent_b(df.close, n=20),
-		'bollinger_percent_b__40': calculate_percent_b(df.close, n=40),
-		'bollinger_percent_b__80': calculate_percent_b(df.close, n=80),
-		'bollinger_percent_b__150': calculate_percent_b(df.close, n=150),
+        'hma_zscore_25_49': calculate_hma_zscore(df.close,25,49),
+        
 
 		# 'noise_1': pd.Series(np.random.random(df.shape[0]), index=df.index),
 		# 'noise_2': pd.Series(np.random.random(df.shape[0]), index=df.index),

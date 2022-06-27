@@ -15,7 +15,7 @@ def calc_python_sma(close: List[float], m: int=10) -> List[float]:
 	result = [None] * (m-1)
 	for i in range(len(close)-(m-1)):
 		result.append(sum(close[i:i+m])/m)
-	assert len(result) == len(close), 'Result length does not match inputted data'
+	assert len(result) == len(close), 'Result length does not match input data'
 	return result
 
 def calc_python_rolling_volatility(close: List[float], m: int):
@@ -27,10 +27,11 @@ def calc_python_rolling_volatility(close: List[float], m: int):
 			result.append(None)
 		else:
 			result.append(statistics.stdev(close[i-(m-1):i+1])*((252/m)**.5))
-	assert len(result) == len(close), 'Result length does not match inputted data'
+	assert len(result) == len(close), 'Result length does not match input data'
 	return result
 
-def calc_python_macd(close: List[float], n1: int = 8, n2: int = 18) -> List[float]:
+def calc_python_macd(close: List[float], n1: int = 8, n2: int = 18) \
+		-> List[float]:
 	assert n1 < n2, 'Second window length must be greater than first'
 	sma1 = calc_python_sma(close, n1)
 	sma2 = calc_python_sma(close, n2)
@@ -53,7 +54,8 @@ def normalize_python_macd(macd: List, n2: int = 18) -> List:
 			result.append(None)
 		else:
 			result.append(macd[i] / vol[i])
-	assert len(result) == len(macd), 'Normalized MACD length does not match inputted data'
+	assert len(result) == len(macd), \
+		'Normalized MACD length does not match input data'
 	return result
 
 def calc_python_macd_signal(macd: List[float]) -> List[float]:
@@ -111,8 +113,11 @@ def calc_pandas_macd_signal(close: pd.Series, n1: int = 5, n2: int = 34):
 	assert result.size == close.size, 'Result dimensions do not match'
 	return result
 
-# Haven't quite gotten this part working yet, but this should be another MACD signal line, calculated by taking the moving average of the MACD
-def calc_pandas_macd_signal_v2(close: pd.Series, n1: int = 5, n2: int = 34, signal: int = 9):
+# Haven't quite gotten this part working yet, but this should be another
+# MACD signal line, calculated by taking the moving average of the MACD
+def calc_pandas_macd_signal_v2(
+		close: pd.Series, n1: int = 5, n2: int = 34, signal: int = 9
+):
 	assert n1 < n2, 'Second window size must be greater than first'
 	macd = calc_pandas_macd(close, n1, n2)
 	macd_signal = calc_pandas_sma(macd, signal)

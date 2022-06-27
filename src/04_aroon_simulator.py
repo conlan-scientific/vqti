@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from aroon_oscillator import aroon_python_deque, aroon_signal_line
+from vqti.indicators.aroon_oscillator import aroon_python_deque, aroon_signal_line
 
 class HistoricalData():
 
