@@ -36,10 +36,32 @@ if __name__ == '__main__':
         price_series = eod_data[symbol].dropna()
         price_index = price_series.index
         
+        # Section 7.1 (Events)
         # Get events, labels, weights, and features
         event_index = calculate_events(revenue_series)
+
+        # Section 7.2 (Triple-barrier method)
+        # Calculating y (but also t1)
         event_labels, event_spans = calculate_labels(price_series, event_index)
+
+        # Section 7.3 (Weights)
+        # 1   1.1
+        # 0   0.5
+        # 0   0.7
+        # .   0.6
+        # .   0.3 
+        # .   1.3
+        # 1   1.1
+        # 0   1.7
+
+        # x                                     o
+        #         x                             o
+        #                    x                  o
+        #                                              x      o
+        # ------------------------------------------------------ t ---> 
         weights = calculate_weights(event_spans, price_index)
+
+
         features_df = calculate_features(price_series, revenue_series)
 
         # Subset features by event dates
