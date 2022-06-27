@@ -6,6 +6,7 @@ from vqti.indicators.hma_signals import calculate_hma_zscore
 from sklearn import tree
 from sklearn import ensemble
 import numpy as np
+from hull_data import calculate_tbm_labels
 
 symbols = get_all_symbols() # ['AWU', 'BGH', ...]
 
@@ -30,11 +31,12 @@ for symbol in symbols[:5]:
 	assert t0.shape == t1.shape
 	# _y = (df.close[t1].values > df.close[t0].values).astype('int64')
 	# _y = pd.Series(_y, index=t0, name='y')
-
+	
 	_y = [
 		(1 if x > 0.20 else (-1 if x < 0 else 0)) for x in \
 		(df.close[t1].values / df.close[t0].values - 1)
 	]
+	event_labels, event_spans = calculate_tbm_labels(price_series, event_index)
 	_y = pd.Series(_y, index=t0, name='y')
 	t0 = t0[_y != 0]
 	t1 = t1[_y != 0]

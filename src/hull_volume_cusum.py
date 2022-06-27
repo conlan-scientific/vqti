@@ -56,7 +56,7 @@ def calculate_cusum_events(series: pd.Series,
             s_down = 0
             event_dates.append(date)
    
-    _plot(series, filter_threshold, event_dates, s_up, s_down)
+    #_plot(series, filter_threshold, event_dates, s_up, s_down)
         
     return pd.DatetimeIndex(event_dates)
 
@@ -70,9 +70,9 @@ def calculate_events_for_revenue_series(series: pd.Series,
     the log volume series
     """
     #series = pd.Series.pct_change(series)
-    series = np.log(series)
-    series = filters.calculate_non_uniform_lagged_change(series, lookback)
-    return filters.calculate_cusum_events(series, filter_threshold)
+    #series = np.log(series)
+    series = calculate_non_uniform_lagged_change(series, lookback)
+    return calculate_cusum_events(series, filter_threshold)
 
 
 def calculate_volume_events(volume_series: pd.Series):
