@@ -117,7 +117,7 @@ if __name__ == '__main__':
     # Events on Revenue series
     ax = plt.subplot2grid((5,4), (0,0), rowspan=3, colspan=4)
     ax.plot(df.index ,df.value,color='blue',lw=2,label="Close")
-    ax.plot(events, df.value[events], '>' , color='red',lw=2, ms=5, label='Events')
+    ax.plot(events, df.value[events], '>' , color='red',lw=2, ms=7, label='Events')
     ax.set_title("Events",fontsize=30)
     ax.set_xlabel('Date',fontsize=24)
     ax.set_ylabel('Revenue ($)',fontsize=24)

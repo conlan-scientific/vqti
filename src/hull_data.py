@@ -1,5 +1,7 @@
+from cmath import log
 import os
 import pandas as pd
+import numpy as np
 from pandas import DataFrame
 from typing import Dict, List, Tuple
 
@@ -111,16 +113,28 @@ def load_data() -> Tuple[List[str], pd.DataFrame, pd.DataFrame]:
 	return symbols, eod_data, alt_data
 
 def load_volume_data() -> Tuple[List[str], pd.DataFrame, pd.DataFrame]:
-	"""
-	Load the data as is will be used in the alternative data model
-	"""
-	symbols: List[str] = get_all_symbols()
-	volume_data = load_volume_matrix(symbols)
-	eod_data = load_eod_matrix(symbols)
-	eod_data = eod_data[eod_data.index >= volume_data.index.min()]
+    """
+    Load the data as is will be used in the alternative data model
+    """
+    symbols: List[str] = get_all_symbols()
+    volume_data = load_volume_matrix(symbols)
+    eod_data = load_eod_matrix(symbols)
+    eod_data = eod_data[eod_data.index >= volume_data.index.min()]
+    
+    return symbols, eod_data, volume_data
 
-	return symbols, eod_data, volume_data
-
+def load_volume_and_revenue_data() -> Tuple[List[str], pd.DataFrame, pd.DataFrame]:
+    """
+    Load the data as is will be used in the alternative data model
+    """
+    symbols: List[str] = get_all_symbols()
+    volume_data = load_volume_matrix(symbols)
+    revenue_data = load_alternative_data_matrix(symbols)
+    eod_data = load_eod_matrix(symbols)
+    volume_data = volume_data[volume_data.index >= revenue_data.index.min()]
+    eod_data = eod_data[eod_data.index >= revenue_data.index.min()]
+    
+    return symbols, eod_data, volume_data, revenue_data
 
 from pypm import labels
 
@@ -142,14 +156,74 @@ def calculate_tbm_labels(price_series, event_index) -> Tuple[pd.Series, pd.Serie
         price_series,
         event_index,
         time_delta_days=time_delta_days,
-        upper_delta=0.10,
-        lower_delta=-0.10,
+        #upper_delta=0.10,
+        #lower_delta=-0.10,
         upper_z=1.8,
         lower_z=-1.8,
         lower_label=-1,
     )
 
     return event_labels, event_spans
+
+from pypm import indicators, filters, metrics
+from vqti.indicators.hma import calculate_numpy_matrix_hma
+from vqti.indicators.hma_signals import calculate_hma_zscore
+
+_calc_delta = filters.calculate_non_uniform_lagged_change
+_calc_ma = indicators.calculate_simple_moving_average
+_calc_log_return = metrics.calculate_log_return_series
+
+def _calc_rolling_vol(series, n):
+    return series.rolling(n).std() * np.sqrt(252 / n)
+
+def calculate_hull_features(price_series, volume_series, revenue_series) -> pd.DataFrame:
+    """
+    Calculate any and all potentially useful features. Return as a dataframe.
+    """
+    log_volume = np.log(volume_series)
+    log_revenue = np.log(revenue_series)
+    log_prices = np.log(price_series)
+
+    log_revenue_ma = _calc_ma(log_revenue, 10)
+    log_prices_ma = _calc_ma(log_prices, 10)
+    log_volume_ma = _calc_ma(log_volume, 10)
+    
+    log_returns = _calc_log_return(price_series)
+
+    features_by_name = dict()
+
+    for i in [7, 30, 90, 180, 360]:
+
+        rev_feature = _calc_delta(log_revenue_ma, i)
+        price_feature = _calc_delta(log_prices_ma, i)
+        vol_feature = _calc_rolling_vol(log_returns, i)
+        volume_feature = _calc_delta(log_volume_ma, i)
+
+        features_by_name.update({
+            f'{i}_day_revenue_delta': rev_feature,
+            f'{i}_day_return': price_feature,
+            f'{i}_day_vol': vol_feature,
+            f'{i}_day_volume_delta' : volume_feature,
+        })
+        
+    hma_trend_10 = calculate_numpy_matrix_hma(price_series, 16)
+    hma_trend_25 = calculate_numpy_matrix_hma(price_series, 25)
+    hma_trend_49 = calculate_numpy_matrix_hma(price_series, 49)
+    hma_trend_81 = calculate_numpy_matrix_hma(price_series, 81)
+
+    hma_zscore_25_49 = calculate_hma_zscore(price_series,25,49)
+    
+    features_by_name.update({
+        'hma_trend_10': hma_trend_10,
+		'hma_trend_25': hma_trend_25,
+		'hma_trend_49': hma_trend_49,
+		'hma_trend_81': hma_trend_81,
+        'hma_zscore_25_49': hma_zscore_25_49,
+    })
+        
+    features_df = pd.DataFrame(features_by_name)    
+    return features_df
+
 
 if __name__ == '__main__':
     build_eod_closes()

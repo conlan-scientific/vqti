@@ -15,19 +15,21 @@ for symbol in symbols[:5]:
 	print('Preparing training data for', symbol, '...')
 	df = load_eod(symbol)
 
+	# t0 are the events
 	# Trade the stock once every 22 trading days (monthly)
 	t0: pd.Index = df.index[::22]
 
+	#t1 are trade ends(event spans)
 	# Exit after 365 calendar days
 	t1 = pd.Series(
 		df.index[[min(df.shape[0]-1, x) for x in df.index.searchsorted(t0 + pd.Timedelta(days=365))]], 
 		index=t0,
 	)
 
+	# The event label, y
+	# was the trade a winner or loser
 	# A +1 if the stock goes up and a 0 if it goes down
 	# This has length equal to t0 and t1
-	# TODO: Do a better job at setting y to something really significant
-	# TODO: Investigate the triple barrier method
 	assert t0.shape == t1.shape
 	# _y = (df.close[t1].values > df.close[t0].values).astype('int64')
 	# _y = pd.Series(_y, index=t0, name='y')
@@ -36,7 +38,8 @@ for symbol in symbols[:5]:
 		(1 if x > 0.20 else (-1 if x < 0 else 0)) for x in \
 		(df.close[t1].values / df.close[t0].values - 1)
 	]
-	event_labels, event_spans = calculate_tbm_labels(price_series, event_index)
+	
+ 
 	_y = pd.Series(_y, index=t0, name='y')
 	t0 = t0[_y != 0]
 	t1 = t1[_y != 0]

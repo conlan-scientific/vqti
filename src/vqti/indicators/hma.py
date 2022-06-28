@@ -50,7 +50,7 @@ def calculate_numpy_matrix_hma(values: pd.Series, m: int=10) -> pd.Series:
 	hma = calculate_numpy_matrix_wma(
                 (2* calculate_numpy_matrix_wma(values, int(m/2))) -\
                     (calculate_numpy_matrix_wma(values, m)), int(np.sqrt(m)))
-	return pd.Series(hma.values, index=values.index, dtype='float64', name='hma')
+	return  pd.Series(hma.values, index=values.index, dtype='float64', name='hma')
 
 # fastest pandas wma
 def calculate_pandas_wma(values: pd.Series, m: int=10) -> pd.Series:

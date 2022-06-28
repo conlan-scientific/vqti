@@ -1,12 +1,11 @@
-
 import numpy as np
 import pandas as pd
 from vqti.load import load_eod
 import matplotlib.pyplot as plt
 
 
-#### THIS FILE CALCULATES EVENTS BASED ON VOLUME CHANGE AND ACCUMULATION FROM THE DAY BEFORE #######
-
+#### THIS FILE CALCULATES EVENTS BASED ON VOLUME CHANGE FROM THE DAY BEFORE #######
+### filter is the percent change from the day before #####
 def calculate_non_uniform_lagged_change(series: pd.Series, n_days: int):
     """
     Use pd.Series.searchsorted to measure the lagged change in a non-uniformly 
@@ -34,26 +33,26 @@ def calculate_non_uniform_lagged_change(series: pd.Series, n_days: int):
     return pd.concat([_na_pad, _diff2])
 
 
-def calculate_cusum_events(series: pd.Series, 
+def calculate_event_dates(series: pd.Series, 
     filter_threshold: float) -> pd.DatetimeIndex:
     """
     Calculate symmetric cusum filter and corresponding events
     """
 
     event_dates = list()
-    s_up = 0
-    s_down = 0
+    #s_up = 1.5
+    #s_down = -1.5
 
     for date, volume in series.items():
-        s_up = max(0, s_up + volume)
-        s_down = min(0, s_down + volume)
+        #s_up = max(0, s_up + volume)
+        # s_down = min(0, s_down + volume)
 
-        if s_up > filter_threshold:
-            s_up = 0
+        if volume > filter_threshold:
+            #s_up = 0
             event_dates.append(date)
 
-        elif s_down < -filter_threshold:
-            s_down = 0
+        elif volume < -filter_threshold:
+            #s_down = 0
             event_dates.append(date)
    
     #_plot(series, filter_threshold, event_dates, s_up, s_down)
@@ -63,7 +62,7 @@ def calculate_cusum_events(series: pd.Series,
 # In pypm.ml_model.events
 from pypm import filters
 
-def calculate_events_for_revenue_series(series: pd.Series, 
+def calculate_events_for_volume_series(series: pd.Series, 
     filter_threshold: float, lookback: int=1) -> pd.DatetimeIndex:
     """
     Calculate the symmetric cusum filter to generate events on day-to-day changes in 
@@ -72,13 +71,13 @@ def calculate_events_for_revenue_series(series: pd.Series,
     #series = pd.Series.pct_change(series)
     #series = np.log(series)
     series = calculate_non_uniform_lagged_change(series, lookback)
-    return calculate_cusum_events(series, filter_threshold)
+    return calculate_event_dates(series, filter_threshold)
 
 
-def calculate_volume_events(volume_series: pd.Series):
-    return calculate_events_for_revenue_series(
+def calculate_volume_pct_change_events(volume_series: pd.Series):
+    return calculate_events_for_volume_series(
         volume_series,
-        filter_threshold=2.0,
+        filter_threshold=1.5,
         lookback=1,
     )
 
@@ -119,7 +118,7 @@ if __name__ == '__main__':
 
     df = load_eod('AWU')
 
-    events = calculate_volume_events(df.volume)
+    events = calculate_volume_pct_change_events(df.volume)
    
     ax = plt.subplot2grid((5,4), (0,0), rowspan=3, colspan=4)
     ax.plot(df.index ,df.close,color='blue',lw=2,label="Close")
@@ -136,8 +135,3 @@ if __name__ == '__main__':
     plt.xticks(fontsize=18)
     plt.show()
     
-   
-
-
-
-        
