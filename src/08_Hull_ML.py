@@ -1,132 +1,114 @@
+import os
 import pandas as pd
-from vqti.load import load_eod
-from pypm.data_io import get_all_symbols
-from vqti.indicators.hma import calculate_numpy_matrix_hma
-from vqti.indicators.hma_signals import calculate_hma_zscore
-from sklearn import tree
-from sklearn import ensemble
 import numpy as np
-from hull_data import calculate_tbm_labels
+from typing import Dict
+import matplotlib.pyplot as plt
+from joblib import dump
+from sklearn.preprocessing import StandardScaler
+from hull_load_data import (load_data, 
+                       load_volume_data, 
+                       calculate_hull_features,
+                       load_volume_and_revenue_data)
 
-symbols = get_all_symbols() # ['AWU', 'BGH', ...]
+from pypm.ml_model.events import calculate_events
+from pypm.ml_model.labels import calculate_labels
+from pypm.ml_model.features import calculate_features
+from pypm.ml_model.model import calculate_model
+from pypm.ml_model.weights import calculate_weights
+from hull_volume_filter import calculate_volume_pct_change_events
+from sklearn import ensemble
+from sklearn import tree
 
-_dfs = list()
-for symbol in symbols[:5]:
-	print('Preparing training data for', symbol, '...')
-	df = load_eod(symbol)
-
-	# t0 are the events
-	# Trade the stock once every 22 trading days (monthly)
-	t0: pd.Index = df.index[::22]
-
-	#t1 are trade ends(event spans)
-	# Exit after 365 calendar days
-	t1 = pd.Series(
-		df.index[[min(df.shape[0]-1, x) for x in df.index.searchsorted(t0 + pd.Timedelta(days=365))]], 
-		index=t0,
-	)
-
-	# The event label, y
-	# was the trade a winner or loser
-	# A +1 if the stock goes up and a 0 if it goes down
-	# This has length equal to t0 and t1
-	assert t0.shape == t1.shape
-	# _y = (df.close[t1].values > df.close[t0].values).astype('int64')
-	# _y = pd.Series(_y, index=t0, name='y')
-	
-	_y = [
-		(1 if x > 0.20 else (-1 if x < 0 else 0)) for x in \
-		(df.close[t1].values / df.close[t0].values - 1)
-	]
-	
- 
-	_y = pd.Series(_y, index=t0, name='y')
-	t0 = t0[_y != 0]
-	t1 = t1[_y != 0]
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+# SRC_DIR = '\\'.join(os.path.dirname(__file__).split("/"))
+VQTI_DIR = os.path.dirname(SRC_DIR)
 
 
-	_X = pd.DataFrame({
-		'hma_trend_10': calculate_numpy_matrix_hma(df.close, 16),
-		'hma_trend_25': calculate_numpy_matrix_hma(df.close, 25),
-		'hma_trend_49': calculate_numpy_matrix_hma(df.close, 49),
-		'hma_trend_81': calculate_numpy_matrix_hma(df.close, 81),
+if __name__ == '__main__':
 
-        'hma_zscore_25_49': calculate_hma_zscore(df.close,25,49),
+    # All the data we have to work with
+    symbols, eod_data, volume_data, revenue_data = load_volume_and_revenue_data()
+    
+    # The ML dataframe for each symbol, to be combined later
+    df_by_symbol: Dict[str, pd.DataFrame] = dict()
+
+    # Build ML dataframe for each symbol
+    for symbol in symbols:
+
+        # Get volume, revenue and price series
+        volume_series = volume_data[symbol].dropna()
+        revenue_series = revenue_data[symbol].dropna()
+        price_series = eod_data[symbol].dropna()
+        price_index = price_series.index
         
+        # Section 7.1 (Events)
+        # Get events, labels, weights, and features
+        event_index = calculate_volume_pct_change_events(volume_series)
 
-		# 'noise_1': pd.Series(np.random.random(df.shape[0]), index=df.index),
-		# 'noise_2': pd.Series(np.random.random(df.shape[0]), index=df.index),
-		# 'noise_3': pd.Series(np.random.random(df.shape[0]), index=df.index),
-		# 'noise_4': pd.Series(np.random.random(df.shape[0]), index=df.index),
-		# 'noise_5': pd.Series(np.random.random(df.shape[0]), index=df.index),
+        # Section 7.2 (Triple-barrier method)
+        # Calculating y (but also t1)
+        event_labels, event_spans = calculate_labels(price_series, event_index)
 
-	}, index=df.index)
+        # Section 7.3 (Weights)
+        # 1   1.1
+        # 0   0.5
+        # 0   0.7
+        # .   0.6
+        # .   0.3 
+        # .   1.3
+        # 1   1.1
+        # 0   1.7
 
-	_X = _X.loc[t0]
-
-	# _df = pd.concat([_X, _y.to_frame()])
-	_df = _X.copy()
-	_df['y'] = _y
-	_dfs.append(_df)
-
-training_data = pd.concat(_dfs, axis=0)
-training_data = training_data.dropna(how='any', axis=0)
-training_data = training_data.dropna(how='all', axis=1)
-
-
-classifier = tree.DecisionTreeClassifier(max_depth=7)
-
-# TODO: Use a less complex model
-# classifier = ensemble.RandomForestClassifier(
-# 	max_depth=3,
-# 	n_estimators=100,
-# 	# min_weight_fraction_leaf=0.0001,
-# 	# min_impurity_decrease=0.0001,
-# 	verbose=1,
-# 	oob_score=True,
-# )
-
-y = training_data['y']
-X = training_data.drop(columns=['y'])
-classifier.fit(X, y)
-y_hat = classifier.predict(X)
-y_hat = pd.Series(y_hat, name='y_hat', index=y.index)
-print(f'Accuracy: {100 * (y == y_hat).mean():.2f}%')
-# print(classifier.oob_score_)
+        # x                                     o
+        #         x                             o
+        #                    x                  o
+        #                                              x      o
+        # ------------------------------------------------------ t ---> 
+        weights = calculate_weights(event_spans, price_index)
 
 
+        features_df = calculate_hull_features(price_series, volume_series, revenue_series)
 
+        # Subset features by event dates
+        features_on_events = features_df.loc[event_index]
 
+        # Convert labels and events to a dataframe
+        labels_df = pd.DataFrame(event_labels)
+        labels_df.columns = ['y']
 
-##################################
+        # Converts weights to a dataframe
+        weights_df = pd.DataFrame(weights)
+        weights_df.columns = ['weights']
 
+        # Concatenate features to labels
+        df = pd.concat([features_on_events, weights_df, labels_df], axis=1)
+        df_by_symbol[symbol] = df
 
+    # Create final ML dataframe
+    df = pd.concat(df_by_symbol.values(), axis=0)
+    df.sort_index(inplace=True)
+    df.dropna(inplace=True)
+    print(df)
+    
+    # Fit the model
+    classifier = calculate_model(df)
+    # classifier = tree.DecisionTreeClassifier(max_depth=7)
+    # classifier = ensemble.RandomForestClassifier(
+    #     max_depth=3,
+    #     n_estimators=100,
+    #     # min_weight_fraction_leaf=0.0001,
+    #     # min_impurity_decrease=0.0001,
+    #     verbose=1,
+    #     oob_score=True,
+    # )
+    
+    # y = df['y']
+    # X = df.drop(columns=['y'])
+    # classifier.fit(X, y)
+    # y_hat = classifier.predict(X)
+    # y_hat = pd.Series(y_hat, name='y_hat', index=y.index)
+    # print(f'Accuracy: {100 * (y == y_hat).mean():.2f}%')
+    # print(classifier.oob_score_)
 
-# pieces_of_X = []
-# pieces_of_y = []
-# symbols = [...]
-# for symbol in symbols:
-# 	df = load_eod(symbol)
-
-# 	# Trade the stock once every 10 trading days
-# 	t0: pd.Index = df.index[::10]
-
-# 	# Exit after 8 calendar days
-# 	t1 = t0 + pd.Timedelta(days=8)
-
-# 	# A +1 if the stock goes up and a 0 if it goes down
-# 	# This has length equal to t0 and t1
-# 	piece_of_y = (df.close[t1] > df.close[t0]).astype('int64')
-
-# 	# This has a length equal to df.shape[0]
-# 	piece_of_X = do_a_ton_of_technical_indicators(df)
-
-# 	# Now it has length equal to t0, t1, and piece_of_y
-# 	piece_of_X = piece_of_X[t0]
-
-# 	pieces_of_X.append(piece_of_X)
-# 	pieces_of_y.append(piece_of_y)
-
-# X = pd.concat(pieces_of_X, axis=0)
-# y = pd.concat(pieces_of_y, axis=0)
-
+    # Save the model
+    # dump(classifier, os.path.join(SRC_DIR, 'ml_model.joblib'))

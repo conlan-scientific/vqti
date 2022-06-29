@@ -5,7 +5,7 @@ from typing import Dict
 
 from joblib import dump
 
-from hull_data import load_data, load_volume_data
+from hull_load_data import load_data, load_volume_data
 from pypm.ml_model.events import calculate_events
 from pypm.ml_model.labels import calculate_labels
 from pypm.ml_model.features import calculate_features
@@ -23,7 +23,6 @@ if __name__ == '__main__':
 
     # All the data we have to work with
     symbols, eod_data, alt_data = load_data()
-    # symbols, eod_data, alt_data = load_volume_data()
     
     # The ML dataframe for each symbol, to be combined later
     df_by_symbol: Dict[str, pd.DataFrame] = dict()
@@ -63,7 +62,7 @@ if __name__ == '__main__':
 
 
         features_df = calculate_features(price_series, revenue_series)
-
+        
         # Subset features by event dates
         features_on_events = features_df.loc[event_index]
 

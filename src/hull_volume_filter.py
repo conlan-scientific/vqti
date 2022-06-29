@@ -55,7 +55,6 @@ def calculate_event_dates(series: pd.Series,
             #s_down = 0
             event_dates.append(date)
    
-    #_plot(series, filter_threshold, event_dates, s_up, s_down)
         
     return pd.DatetimeIndex(event_dates)
 
@@ -81,38 +80,7 @@ def calculate_volume_pct_change_events(volume_series: pd.Series):
         lookback=1,
     )
 
-def _plot(series, threshold, event_dates, s_up, s_down):
-    """Plot results of the detect_cusum function, see its help."""
 
-    (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
-
-    t = range(series.size)
-    ax1.plot(t, series, 'b-', lw=2)
-    if len(event_dates):
-        ax1.plot(event_dates, series[event_dates], '>', mfc='g', mec='g', ms=10,
-                    label='Event Start')
-            
-    ax1.set_xlim(-.01*series.size, series.size*1.01-1)
-    ax1.set_xlabel('Data #', fontsize=14)
-    ax1.set_ylabel('Amplitude', fontsize=14)
-    ymin, ymax = series[np.isfinite(x)].min(), series[np.isfinite(x)].max()
-    yrange = ymax - ymin if ymax > ymin else 1
-    ax1.set_ylim(ymin - 0.1*yrange, ymax + 0.1*yrange)
-    ax1.set_title('Time series and Detected Events ' +
-                      '(threshold= %.3g): N changes = %d'
-                      % (threshold, len(event_dates)))
-    ax2.plot(t, s_up, 'y-', label='+')
-    ax2.plot(t, s_down, 'm-', label='-')
-    ax2.set_xlim(-.01*series.size, series.size*1.01-1)
-    ax2.set_xlabel('Data #', fontsize=14)
-    ax2.set_ylim(-0.01*threshold, 1.1*threshold)
-    ax2.axhline(threshold, color='r')
-    ax1.set_ylabel('Amplitude', fontsize=14)
-    ax2.set_title('Time series of the cumulative sums of ' +
-                      'positive and negative changes')
-    ax2.legend(loc='best', framealpha=.5, numpoints=1)
-    plt.tight_layout()
-    plt.show()
 
 if __name__ == '__main__':
 

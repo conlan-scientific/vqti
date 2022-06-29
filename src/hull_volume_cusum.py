@@ -29,9 +29,9 @@ def calculate_non_uniform_lagged_change(series: pd.Series, n_days: int):
     _lagged_series = series.iloc[_idx]
 
     # Measure the difference
-    #_diff = pd.Series(_series.values-_lagged_series.values, index=_series.index)
-    _diff2= pd.Series((_series.values-_lagged_series.values)/ np.abs(_lagged_series.values), index=_series.index)
-    return pd.concat([_na_pad, _diff2])
+    _diff= pd.Series((_series.values-_lagged_series.values)/ \
+        np.abs(_lagged_series.values), index=_series.index)
+    return pd.concat([_na_pad, _diff])
 
 
 def calculate_cusum_events(series: pd.Series, 
@@ -55,8 +55,7 @@ def calculate_cusum_events(series: pd.Series,
         elif s_down < -filter_threshold:
             s_down = 0
             event_dates.append(date)
-   
-    #_plot(series, filter_threshold, event_dates, s_up, s_down)
+
         
     return pd.DatetimeIndex(event_dates)
 
@@ -82,38 +81,6 @@ def calculate_volume_events(volume_series: pd.Series):
         lookback=1,
     )
 
-def _plot(series, threshold, event_dates, s_up, s_down):
-    """Plot results of the detect_cusum function, see its help."""
-
-    (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
-
-    t = range(series.size)
-    ax1.plot(t, series, 'b-', lw=2)
-    if len(event_dates):
-        ax1.plot(event_dates, series[event_dates], '>', mfc='g', mec='g', ms=10,
-                    label='Event Start')
-            
-    ax1.set_xlim(-.01*series.size, series.size*1.01-1)
-    ax1.set_xlabel('Data #', fontsize=14)
-    ax1.set_ylabel('Amplitude', fontsize=14)
-    ymin, ymax = series[np.isfinite(x)].min(), series[np.isfinite(x)].max()
-    yrange = ymax - ymin if ymax > ymin else 1
-    ax1.set_ylim(ymin - 0.1*yrange, ymax + 0.1*yrange)
-    ax1.set_title('Time series and Detected Events ' +
-                      '(threshold= %.3g): N changes = %d'
-                      % (threshold, len(event_dates)))
-    ax2.plot(t, s_up, 'y-', label='+')
-    ax2.plot(t, s_down, 'm-', label='-')
-    ax2.set_xlim(-.01*series.size, series.size*1.01-1)
-    ax2.set_xlabel('Data #', fontsize=14)
-    ax2.set_ylim(-0.01*threshold, 1.1*threshold)
-    ax2.axhline(threshold, color='r')
-    ax1.set_ylabel('Amplitude', fontsize=14)
-    ax2.set_title('Time series of the cumulative sums of ' +
-                      'positive and negative changes')
-    ax2.legend(loc='best', framealpha=.5, numpoints=1)
-    plt.tight_layout()
-    plt.show()
 
 if __name__ == '__main__':
 
@@ -123,14 +90,16 @@ if __name__ == '__main__':
    
     ax = plt.subplot2grid((5,4), (0,0), rowspan=3, colspan=4)
     ax.plot(df.index ,df.close,color='blue',lw=2,label="Close")
-    ax.plot(events, df.close[events], '>' , color='red',lw=2, ms=5, label='Events')
+    ax.plot(events, df.close[events], '>' , color='red',lw=2, ms=5, 
+            label='Events')
     ax.set_title("Events",fontsize=30)
     ax.set_xlabel('Date',fontsize=24)
     ax.set_ylabel('Price ($)',fontsize=24)
     bottom_plt = plt.subplot2grid((5,4), (3,0), rowspan=1, colspan=4)
     bottom_plt.bar(df.index, df.volume)
     
-    ax.legend(loc='best', frameon=True, fancybox=True, framealpha=0.95, fontsize=18, facecolor='#D9DDE1')
+    ax.legend(loc='best', frameon=True, fancybox=True, framealpha=0.95, 
+              fontsize=18, facecolor='#D9DDE1')
     ax.grid(color='gray', linestyle='--', linewidth=1)
     plt.yticks(fontsize=18)
     plt.xticks(fontsize=18)

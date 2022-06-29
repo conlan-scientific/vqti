@@ -1,9 +1,10 @@
-from cmath import log
 import os
 import pandas as pd
 import numpy as np
 from pandas import DataFrame
 from typing import Dict, List, Tuple
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
 
 from pypm.data_io import DATA_DIR
 
@@ -223,6 +224,46 @@ def calculate_hull_features(price_series, volume_series, revenue_series) -> pd.D
         
     features_df = pd.DataFrame(features_by_name)    
     return features_df
+
+
+
+def plot_features_hist(features_df: pd.DataFrame):
+    for i in range(len(features_df.columns[:-1])):
+        label = features_df.columns[i]
+        plt.hist(features_df[features_df['y']==1][label], color='blue', 
+                 label="Winning Trade", alpha=0.7, density=True, bins=15)
+        plt.hist(features_df[features_df['y']==0][label], color='red', 
+                 label=" Losing Trade", alpha=0.7, density=True, bins=15)
+        plt.title(label)
+        plt.ylabel("Probability")
+        plt.xlabel(label)
+        plt.legend()
+        plt.show()
+    return
+def plot_scaled_features_df(df: pd.DataFrame):
+    
+    X = df[df.columns[:-1]].values
+    y = df[df.columns[-1]].values
+
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+    X.shape, y.shape
+    data = np.hstack((X, np.reshape(y, (-1, 1))))
+    X.shape, y.shape
+    transformed_df = pd.DataFrame(data, columns=df.columns)
+    
+    for i in range(len(transformed_df.columns[:-1])):
+        label = transformed_df.columns[i]
+        plt.hist(transformed_df[transformed_df['y']==1][label], color='blue', 
+                 label="Winning Trade", alpha=0.7, density=True, bins=15)
+        plt.hist(transformed_df[transformed_df['y']==0][label], color='red', 
+                 label=" Losing Trade", alpha=0.7, density=True, bins=15)
+        plt.title(label)
+        plt.ylabel("Probability")
+        plt.xlabel(label)
+        plt.legend()
+        plt.show()
+    return
 
 
 if __name__ == '__main__':
