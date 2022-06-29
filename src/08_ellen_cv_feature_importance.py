@@ -138,3 +138,78 @@ if __name__ == '__main__':
     # near term volatility 
     # in terms of revenue delta, the YoY revenue change is most important
  
+
+
+
+
+
+"""
+RandomForestClassifier() ...
+
+We're going to make n_estimators=1000 separate decision trees.
+
+Give me two-thirds of the rows. Just toss out the rest.
+
+                    + 
+                   / \   <--- Come up with a rule 
+                  +   +
+
+    To come up with a rule ...
+        Select a random subset of two-thirds of the columns.
+        Loop through the columns randomly.
+        Test breakpoints somewhat random.
+        Keep the rule with the highest classification accuracy.
+
+                x4 >= 234.5    <---- I found my rule!
+
+                    + 
+                   / \
+                  +   +
+                 / \      <---- Now come up with this rule
+                +   +
+
+Finish the tree.
+
+Now do it 1000 times over for each tree.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
