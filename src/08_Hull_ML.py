@@ -50,20 +50,6 @@ if __name__ == '__main__':
         event_labels, event_spans = calculate_labels(price_series, event_index)
 
         # Section 7.3 (Weights)
-        # 1   1.1
-        # 0   0.5
-        # 0   0.7
-        # .   0.6
-        # .   0.3 
-        # .   1.3
-        # 1   1.1
-        # 0   1.7
-
-        # x                                     o
-        #         x                             o
-        #                    x                  o
-        #                                              x      o
-        # ------------------------------------------------------ t ---> 
         weights = calculate_weights(event_spans, price_index)
 
 
@@ -92,23 +78,7 @@ if __name__ == '__main__':
     
     # Fit the model
     classifier = calculate_model(df)
-    # classifier = tree.DecisionTreeClassifier(max_depth=7)
-    # classifier = ensemble.RandomForestClassifier(
-    #     max_depth=3,
-    #     n_estimators=100,
-    #     # min_weight_fraction_leaf=0.0001,
-    #     # min_impurity_decrease=0.0001,
-    #     verbose=1,
-    #     oob_score=True,
-    # )
-    
-    # y = df['y']
-    # X = df.drop(columns=['y'])
-    # classifier.fit(X, y)
-    # y_hat = classifier.predict(X)
-    # y_hat = pd.Series(y_hat, name='y_hat', index=y.index)
-    # print(f'Accuracy: {100 * (y == y_hat).mean():.2f}%')
-    # print(classifier.oob_score_)
+
 
     # Save the model
     # dump(classifier, os.path.join(SRC_DIR, 'ml_model.joblib'))
