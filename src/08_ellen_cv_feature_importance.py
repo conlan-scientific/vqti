@@ -4,9 +4,9 @@
 """
 Created on Mon Jun 27 12:24:36 2022
 
-The challenge - use the cross validator on dataset and have some conclusions. 
+The challenge - use the cross validator on dataset and have some conclusions.
 
-Note, used revenue data instead of alternative revenue data.
+Added volume features.  
 
 @author: ellenyu
 
@@ -19,6 +19,7 @@ from typing import Dict
 
 from joblib import dump
 
+from pypm import data_io
 from pypm.ml_model.data_io import load_data
 from pypm.ml_model.events import calculate_events
 from pypm.ml_model.labels import calculate_labels
@@ -31,7 +32,7 @@ SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 if __name__ == '__main__':
 
     # All the data we have to work with
-    symbols, eod_data, rev_data= load_data()
+    symbols, eod_data, rev_data, volume_data= load_data()
 
     # The ML dataframe for each symbol, to be combined later
     df_by_symbol: Dict[str, pd.DataFrame] = dict()
@@ -43,14 +44,15 @@ if __name__ == '__main__':
         #revenue_series = alt_data[symbol].dropna()
         revenue_series = rev_data[symbol].dropna()
         price_series = eod_data[symbol].dropna()
+        volume_series = volume_data[symbol].dropna()
         price_index = price_series.index
 
         # Get events, labels, weights, and features
         event_index = calculate_events(revenue_series)
         event_labels, event_spans = calculate_labels(price_series, event_index)
         weights = calculate_weights(event_spans, price_index)
-        features_df = calculate_features(price_series, revenue_series)
-
+        features_df = calculate_features(price_series, revenue_series, volume_series)
+        #print(features_df)
         # Subset features by event dates
         features_on_events = features_df.loc[event_index]
 
@@ -131,10 +133,116 @@ if __name__ == '__main__':
 # OOS accuracy 51.7% +/- 4.7%
 # Improvement 4.8 to 14.2%
 
+
+# Feature importances
+# 30_day_return            0.080
+# 7_day_return             0.079
+# 30_day_vol               0.052
+# 360_day_revenue_delta    0.052
+# 90_day_volume            0.051
+# 90_day_return            0.051
+# 360_day_vol              0.048
+# 360_day_return           0.048
+# 180_day_revenue_delta    0.047
+# 180_day_return           0.047
+# 180_day_volume           0.047
+# 7_day_volume             0.047
+# 7_day_vol                0.047
+# 360_day_volume           0.046
+# 30_day_volume            0.046
+# 7_day_revenue_delta      0.044
+# 180_day_vol              0.044
+# 90_day_revenue_delta     0.042
+# 90_day_vol               0.042
+# 30_day_revenue_delta     0.040
+
+# Cross validation scores
+# [50.7 52.  50.6 54.6 52.5 49.  48.3 50.3 54.5 53.9 48.3 51.7 50.9 54.5
+#  52.7 53.  51.5 52.8 51.1 51.3]
+
+# Baseline accuracy 42.2%
+# OOS accuracy 51.7% +/- 3.7%
+# Improvement 5.8 to 13.3%
+
+
 ## Quick observations 
-# Note, we used revenue data instead of alternative revenue data 
 # Similar to what's discussed in the book, what's important are: 
     # near term return 
     # near term volatility 
     # in terms of revenue delta, the YoY revenue change is most important
- 
+    # change in volume compared to the last 90 days is somewhat important
+
+
+
+
+
+"""
+RandomForestClassifier() ...
+
+We're going to make n_estimators=1000 separate decision trees.
+
+Give me two-thirds of the rows. Just toss out the rest.
+
+                    + 
+                   / \   <--- Come up with a rule 
+                  +   +
+
+    To come up with a rule ...
+        Select a random subset of two-thirds of the columns.
+        Loop through the columns randomly.
+        Test breakpoints somewhat random.
+        Keep the rule with the highest classification accuracy.
+
+                x4 >= 234.5    <---- I found my rule!
+
+                    + 
+                   / \
+                  +   +
+                 / \      <---- Now come up with this rule
+                +   +
+
+Finish the tree.
+
+Now do it 1000 times over for each tree.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
