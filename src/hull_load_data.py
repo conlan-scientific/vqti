@@ -199,7 +199,7 @@ def calculate_hull_features(price_series, volume_series, revenue_series) -> pd.D
         price_feature = _calc_delta(log_prices_ma, i)
         vol_feature = _calc_rolling_vol(log_returns, i)
         volume_feature = _calc_delta(log_volume_ma, i)
-
+        #volume_feature = _calc_rolling_vol(log_volume_ma, i)
         features_by_name.update({
             f'{i}_day_revenue_delta': rev_feature,
             f'{i}_day_return': price_feature,
@@ -207,12 +207,12 @@ def calculate_hull_features(price_series, volume_series, revenue_series) -> pd.D
             f'{i}_day_volume_delta' : volume_feature,
         })
         
-    hma_trend_10 = calculate_numpy_matrix_hma(price_series, 16)
-    hma_trend_25 = calculate_numpy_matrix_hma(price_series, 25)
-    hma_trend_49 = calculate_numpy_matrix_hma(price_series, 49)
-    hma_trend_81 = calculate_numpy_matrix_hma(price_series, 81)
+    hma_trend_10 = calculate_numpy_matrix_hma(log_prices, 16)
+    hma_trend_25 = calculate_numpy_matrix_hma(log_prices, 25)
+    hma_trend_49 = calculate_numpy_matrix_hma(log_prices, 49)
+    hma_trend_81 = calculate_numpy_matrix_hma(log_prices, 81)
 
-    hma_zscore_25_49 = calculate_hma_zscore(price_series,25,49)
+    hma_zscore_25_49 = calculate_hma_zscore(log_prices,25,49)
     
     features_by_name.update({
         'hma_trend_10': hma_trend_10,

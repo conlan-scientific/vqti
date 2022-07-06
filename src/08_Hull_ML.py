@@ -4,20 +4,16 @@ import numpy as np
 from typing import Dict
 import matplotlib.pyplot as plt
 from joblib import dump
-from sklearn.preprocessing import StandardScaler
 from hull_load_data import (load_data, 
-                       load_volume_data, 
-                       calculate_hull_features,
-                       load_volume_and_revenue_data)
-
-from pypm.ml_model.events import calculate_events
+    load_volume_data, 
+    calculate_hull_features,
+    load_volume_and_revenue_data
+)
 from pypm.ml_model.labels import calculate_labels
-from pypm.ml_model.features import calculate_features
 from pypm.ml_model.model import calculate_model
 from pypm.ml_model.weights import calculate_weights
 from hull_volume_filter import calculate_volume_pct_change_events
-from sklearn import ensemble
-from sklearn import tree
+
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 # SRC_DIR = '\\'.join(os.path.dirname(__file__).split("/"))
@@ -61,7 +57,8 @@ if __name__ == '__main__':
         # Convert labels and events to a dataframe
         labels_df = pd.DataFrame(event_labels)
         labels_df.columns = ['y']
-
+        #labels_df = labels_df.where(labels_df.y > 0, 0)
+        
         # Converts weights to a dataframe
         weights_df = pd.DataFrame(weights)
         weights_df.columns = ['weights']
